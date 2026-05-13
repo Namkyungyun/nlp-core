@@ -88,9 +88,9 @@ hybrid = analyzer.analyze("세종대학교 도서관 위치", QueryTarget.HYBRID
 
 | 문서 | 설명 |
 |---|---|
-| [GUIDE.md](GUIDE.md) | 핵심 기능 빠른 시작 (5분 튜토리얼) |
+| [docs/GUIDE.md](docs/GUIDE.md) | 핵심 기능 빠른 시작 (5분 튜토리얼) |
 | [docs/GUIDE.TEST.md](docs/GUIDE.TEST.md) | 전체 API 상세 레퍼런스 |
-| [SPEC.md](SPEC.md) | 기능 명세·정책 |
+| [docs/SPEC.md](docs/SPEC.md) | 기능 명세·정책 |
 | [docs/LOCAL.README.md](docs/LOCAL.README.md) | 로컬 개발 환경 구축 |
 | [docs/INSTALL.MACOS.md](docs/INSTALL.MACOS.md) | macOS 설치 가이드 |
 | [docs/INSTALL.UBUNTU.md](docs/INSTALL.UBUNTU.md) | Ubuntu 22.04 설치 가이드 |
