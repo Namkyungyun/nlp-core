@@ -23,9 +23,9 @@ dependencies = [
 
 `MeCabTokenizer`는 시스템 MeCab 사전이 필요합니다.
 
-- **macOS**: `brew install mecab mecab-ko mecab-ko-dic`
-- **Ubuntu 22.04**: [INSTALL.UBUNTU.md](INSTALL.UBUNTU.md) 참고
-- **Docker**: [INSTALL.DOCKER.md](INSTALL.DOCKER.md) 참고
+- **macOS**: [INSTALL.MACOS.md](INSTALL.MACOS.md) 참고 (`brew install mecab mecab-ko mecab-ko-dic`)
+- **Ubuntu 22.04**: [INSTALL.UBUNTU.md](INSTALL.UBUNTU.md) 참고 (pip install만으로 MeCab 자동 설치)
+- **Docker**: [INSTALL.DOCKER.md](INSTALL.DOCKER.md) 참고 (pip install만으로 MeCab 자동 설치)
 
 ---
 

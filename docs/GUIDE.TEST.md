@@ -57,17 +57,13 @@ dependencies = [
 ### 시스템 의존성
 
 `MeCabTokenizer`는 MeCab과 mecab-ko-dic을 필요로 합니다.
+플랫폼에 따라 공급 방식이 다릅니다.
 
-**macOS**
-
-```bash
-brew install mecab mecab-ko mecab-ko-dic
-```
-
-**Ubuntu 22.04 / Docker**
-
-추가 시스템 패키지 불필요. `pip install` 만으로 완결됩니다.
-자세한 내용은 [INSTALL.UBUNTU.md](INSTALL.UBUNTU.md) / [INSTALL.DOCKER.md](INSTALL.DOCKER.md) 참고.
+| 플랫폼 | MeCab 공급 방식 | 가이드 |
+|---|---|---|
+| **macOS** | 시스템 직접 설치 필요 (`brew install mecab mecab-ko mecab-ko-dic`) | [INSTALL.MACOS.md](INSTALL.MACOS.md) |
+| **Ubuntu 22.04** | pip install 시 manylinux wheel에 자동 번들 — 추가 설치 불필요 | [INSTALL.UBUNTU.md](INSTALL.UBUNTU.md) |
+| **Docker** (`python:3.12-slim`) | pip install 시 manylinux wheel에 자동 번들 — 추가 설치 불필요 | [INSTALL.DOCKER.md](INSTALL.DOCKER.md) |
 
 ---
 

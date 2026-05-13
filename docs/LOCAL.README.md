@@ -3,8 +3,9 @@
 이 문서는 `korean-nlp-core` 레포를 **처음 클론한 개발자**가 macOS 환경에서 로컬 개발을 시작하기 위한 단계별 가이드입니다.
 
 > Ubuntu / Docker 환경은 별도 가이드를 참고하세요.
-> - [docs/INSTALL.UBUNTU.md](./INSTALL.UBUNTU.md)
-> - [docs/INSTALL.DOCKER.md](./INSTALL.DOCKER.md)
+> - [docs/INSTALL.MACOS.md](./INSTALL.MACOS.md) — macOS 설치 가이드 (SDK 소비자용)
+> - [docs/INSTALL.UBUNTU.md](./INSTALL.UBUNTU.md) — Ubuntu 22.04 설치 가이드
+> - [docs/INSTALL.DOCKER.md](./INSTALL.DOCKER.md) — Docker 설치 가이드
 
 ---
 
@@ -259,6 +260,7 @@ print(qa.analyze("조사랑 어미 차이가 뭐예요", QueryTarget.LEXICAL))
 
 | 환경 | 가이드 |
 |---|---|
+| macOS (SDK 소비자용) | [docs/INSTALL.MACOS.md](./INSTALL.MACOS.md) |
 | Ubuntu (apt 기반) | [docs/INSTALL.UBUNTU.md](./INSTALL.UBUNTU.md) |
 | Docker (컨테이너 빌드) | [docs/INSTALL.DOCKER.md](./INSTALL.DOCKER.md) |
 | 로컬 테스트 실행 | [docs/LOCAL.TEST.md](./LOCAL.TEST.md) |
