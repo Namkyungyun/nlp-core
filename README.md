@@ -27,7 +27,13 @@ pip install "bpmg-korean-nlp[hanja]"
 uv pip install -e ".[dev]"
 ```
 
-사전 가용성은 SDK가 부팅 시 `check_mecab_dict()`로 확인할 수 있습니다.
+사전 가용성 확인:
+
+```python
+from bpmg_korean_nlp import check_mecab_dict
+result = check_mecab_dict()
+print(result.available, result.dict_path)
+```
 
 ---
 
@@ -73,21 +79,32 @@ API 상세 설명은 [`GUIDE.md`](GUIDE.md)를, 기능 명세는 [`SPEC.md`](SPE
 | **패키지 레이아웃** | src layout (`src/bpmg_korean_nlp/`) |
 | **타입 선언** | PEP 561 (`py.typed` 포함) |
 
-### 시스템 의존성 — MeCab
+### MeCab 설치 — 플랫폼별 사전 설치
 
-MeCab 형태소 분석기는 Python 패키지 외에 OS 수준 바이너리가 필요합니다.
+> **Python SDK 사용법은 모든 환경에서 동일합니다.**
+> 차이는 MeCab 시스템 바이너리 사전 설치 여부뿐입니다.
 
-| 플랫폼 | 설치 명령 |
-|---|---|
-| macOS (Homebrew) | `brew install mecab mecab-ko mecab-ko-dic` |
-| Ubuntu 22.04 | `sudo apt-get install -y mecab libmecab-dev mecab-ipadic-utf8` |
-| Docker | 아래 Dockerfile 참고 |
+`python-mecab-ko`는 설치 시 `python-mecab-ko-dic`(한국어 사전 번들)을 자동으로
+함께 받아옵니다. **Ubuntu / Docker 환경에서는 별도 시스템 패키지 없이**
+`pip install bpmg-korean-nlp` 한 줄로 동작합니다.
+
+macOS는 Homebrew 사전 설치가 권장됩니다(사전 경로 자동 인식):
+
+```bash
+# macOS only
+brew install mecab mecab-ko mecab-ko-dic
+```
+
+Ubuntu / Docker는 추가 시스템 패키지 없이 pip만으로 충분합니다:
+
+```bash
+pip install bpmg-korean-nlp   # python-mecab-ko-dic 한국어 사전 포함
+```
+
+Docker 예시:
 
 ```dockerfile
 FROM python:3.12-slim
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        mecab libmecab-dev mecab-ipadic-utf8 build-essential \
-    && rm -rf /var/lib/apt/lists/*
 RUN pip install bpmg-korean-nlp
 ```
 
