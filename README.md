@@ -23,11 +23,15 @@ pip install "bpmg-korean-nlp[hanja]"
 
 ### 띄어쓰기 복원 — `SpacingRestorer`
 
-`SpacingRestorer`는 PyKoSpacing 딥러닝 모델에 의존합니다. PyKoSpacing은 별도
-설치가 필요하며, 미설치 환경에서 `SpacingRestorer.get_instance()`를 호출하면
-`SpacingModelLoadError`가 발생합니다. 나머지 기능 (`KoreanNormalizer`,
-`MeCabTokenizer`, `QueryAnalyzer`의 `LEXICAL`/`GRAPH` 타깃)은 PyKoSpacing 없이도
-정상 동작합니다.
+`SpacingRestorer`는 PyKoSpacing 딥러닝 모델에 의존합니다. 별도 설치가 필요합니다:
+
+```bash
+pip install pykospacing
+```
+
+미설치 환경에서 `SpacingRestorer.get_instance()`를 호출하면 `SpacingModelLoadError`가
+발생합니다. 나머지 기능 (`KoreanNormalizer`, `MeCabTokenizer`, `QueryAnalyzer`의
+`LEXICAL`/`GRAPH` 타깃)은 PyKoSpacing 없이도 정상 동작합니다.
 
 개발용 설치:
 
@@ -119,7 +123,7 @@ API 상세 설명은 [`GUIDE.md`](GUIDE.md)를, 기능 명세는 [`SPEC.md`](SPE
 
 | 패키지 | 사용 이유 | 사용처 | 설치 방법 |
 |---|---|---|---|
-| `pykospacing` | 딥러닝 기반 띄어쓰기 복원 모델. 미설치 시 `SpacingRestorer` 사용 불가 | `SpacingRestorer` | 별도 설치 필요 |
+| `pykospacing` | 딥러닝 기반 띄어쓰기 복원 모델. 미설치 시 `SpacingRestorer` 사용 불가 | `SpacingRestorer` | `pip install pykospacing` |
 | `hanja` | 한자 문자열을 한글 음가로 변환 (`大學校` → `대학교`). 손실 변환이므로 기본값 OFF | `KoreanNormalizer` | `pip install "bpmg-korean-nlp[hanja]"` |
 
 ---
