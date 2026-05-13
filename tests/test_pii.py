@@ -10,7 +10,6 @@ from bpmg_korean_nlp.exceptions import PIIDetectedError
 from bpmg_korean_nlp.models import PIIPattern
 from bpmg_korean_nlp.pii import PII_PATTERNS
 
-
 # ---------------------------------------------------------------------------
 # PII_PATTERNS catalogue
 # ---------------------------------------------------------------------------

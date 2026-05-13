@@ -49,7 +49,7 @@
 {"id": "qa_lex_001", "type": "analyze_query", "target": "lexical", "input": "조사랑 어미 차이가 뭐예요", "expected_keywords_contains": ["조사", "어미", "차이"]}
 {"id": "qa_lex_002", "type": "analyze_query", "target": "lexical", "input": "서울에서 가장 좋은 식당", "expected_keywords_contains": ["서울", "식당"]}
 {"id": "qa_lex_003", "type": "analyze_query", "target": "lexical", "input": "한국어 자연어 처리 분야", "expected_keywords_contains": ["한국어", "자연어", "처리"]}
-{"id": "qa_lex_004", "type": "analyze_query", "target": "lexical", "input": "오늘 점심 메뉴 추천", "expected_keywords_contains": ["오늘", "점심", "메뉴"]}
+{"id": "qa_lex_004", "type": "analyze_query", "target": "lexical", "input": "오늘 점심 메뉴 추천", "expected_keywords_contains": ["점심", "메뉴", "추천"]}
 {"id": "qa_lex_005", "type": "analyze_query", "target": "lexical", "input": "", "expected_keywords_contains": []}
 {"id": "qa_lex_006", "type": "analyze_query", "target": "lexical", "input": "비가 와요", "expected_keywords_contains": ["비"]}
 {"id": "qa_sem_001", "type": "analyze_query", "target": "semantic", "input": "조사랑 어미 차이가 뭐예요", "expected_query_contains": "어미"}
@@ -66,7 +66,7 @@
 {"id": "qa_gph_006", "type": "analyze_query", "target": "graph", "input": "음악 듣기", "expected_seeds_contains": ["음악"]}
 {"id": "qa_hyb_001", "type": "analyze_query", "target": "hybrid", "input": "서울 맛집 추천", "expected_keywords_contains": ["서울", "맛집"], "expected_seeds_contains": ["서울", "맛집"], "expected_query_contains": "맛집"}
 {"id": "qa_hyb_002", "type": "analyze_query", "target": "hybrid", "input": "한국어 처리", "expected_keywords_contains": ["한국어", "처리"], "expected_seeds_contains": ["한국어", "처리"], "expected_query_contains": "처리"}
-{"id": "qa_hyb_003", "type": "analyze_query", "target": "hybrid", "input": "오늘 일정", "expected_keywords_contains": ["오늘", "일정"], "expected_seeds_contains": ["일정"], "expected_query_contains": "일정"}
+{"id": "qa_hyb_003", "type": "analyze_query", "target": "hybrid", "input": "오늘 일정", "expected_keywords_contains": ["일정"], "expected_seeds_contains": ["일정"], "expected_query_contains": "일정"}
 {"id": "qa_hyb_004", "type": "analyze_query", "target": "hybrid", "input": "친구 만나기", "expected_keywords_contains": ["친구"], "expected_seeds_contains": ["친구"], "expected_query_contains": "친구"}
 {"id": "qa_hyb_005", "type": "analyze_query", "target": "hybrid", "input": "음악 감상", "expected_keywords_contains": ["음악", "감상"], "expected_seeds_contains": ["음악", "감상"], "expected_query_contains": "음악"}
 {"id": "qa_hyb_006", "type": "analyze_query", "target": "hybrid", "input": "", "expected_keywords_contains": [], "expected_seeds_contains": [], "expected_query_contains": ""}

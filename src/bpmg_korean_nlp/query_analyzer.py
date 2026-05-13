@@ -48,6 +48,14 @@ __all__ = ["QueryAnalyzer", "analyze_query"]
 
 _logger = logging.getLogger(__name__)
 
+_LEXICAL_POS: Final[frozenset[str]] = frozenset({
+    "NNG",  # 일반명사
+    "NNP",  # 고유명사
+    "NNB",  # 의존명사
+    "SL",   # 외국어
+    "SN",   # 숫자
+    "XR",   # 어근
+})
 _GRAPH_POS: Final[frozenset[str]] = frozenset({"NNG", "NNP"})
 _LONG_INPUT_THRESHOLD: Final[int] = 10_000
 
@@ -138,11 +146,16 @@ class QueryAnalyzer:
         return self._normalizer.normalize(text)
 
     def _run_lexical(self, text: str) -> LexicalQueryResult:
-        """Lexical pipeline: ``tokenize + DEFAULT_STOPWORDS`` removal."""
+        """Lexical pipeline: POS-filtered nouns/foreign/number + stopword removal.
+
+        Only tokens whose primary POS tag is in :data:`_LEXICAL_POS` pass through,
+        ensuring verb endings and particles are excluded from BM25 index terms.
+        """
         if not text:
             return LexicalQueryResult(keywords=(), query="")
         tokens = self._tokenizer.tokenize(
             text,
+            pos_filter=_LEXICAL_POS,
             remove_stopwords=True,
             stopwords=self._stopwords,
         )

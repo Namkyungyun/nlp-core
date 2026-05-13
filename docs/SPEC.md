@@ -68,6 +68,7 @@ src/bpmg_korean_nlp/
 | 4 | **반복 문자 축약** | `soynlp.repeat_normalize(num_repeats=2)` |
 | 5 | 한자 → 한글 발음 변환 | 기본 OFF, `hanja_to_hangul=True` 시 활성화 |
 | 6 | 사용자 정의 치환 | `custom_substitutions` 리스트 순서대로 `re.sub` |
+| 7 | 노이즈 제거 | `strip_noise=True` 시 구두점·기호·이모지·자모 감탄사 제거 |
 
 #### 생성 방법
 
@@ -90,6 +91,7 @@ norm = KoreanNormalizer(
 | 반복 문자 축약 | ON | 변경 불가 (잠금) |
 | hanja_to_hangul | OFF | 인스턴스 생성 시 변경 가능 |
 | custom_substitutions | 없음 | 인스턴스 생성 시 변경 가능 |
+| strip_noise | OFF | 인스턴스 생성 시 변경 가능 |
 
 #### 입출력 규약
 
@@ -165,7 +167,7 @@ BM25 인덱싱용 토큰 배열을 반환합니다.
 모든 타깃은 `analyze()` 진입 후 동일한 전처리를 공유합니다.
 
 ```
-입력 → normalize() → 타깃별 처리
+입력 → normalize() → 타깃별 처리 (LEXICAL: NNG/NNP/NNB/SL/SN/XR POS 필터 + 불용어 제거)
 ```
 
 #### HYBRID 병렬 처리

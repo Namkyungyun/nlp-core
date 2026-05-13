@@ -271,6 +271,68 @@ def test_analyze_query_accepts_string_target() -> None:
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# POS filter behaviour in lexical pipeline
+# ---------------------------------------------------------------------------
+
+
+def test_lexical_excludes_verb_endings() -> None:
+    """Verb+ending compound tags (VV+EC) are excluded from lexical results."""
+    qa, _ = _build_analyzer(
+        [
+            ("맛집", "NNG"),
+            ("추천", "NNG"),
+            ("해주", "VV+EC"),
+            ("세요", "EP+EF"),
+        ]
+    )
+    result = qa.analyze("맛집 추천 해주세요", QueryTarget.LEXICAL)
+    assert isinstance(result, LexicalQueryResult)
+    assert "맛집" in result.keywords
+    assert "추천" in result.keywords
+    assert "해주" not in result.keywords
+    assert "세요" not in result.keywords
+
+
+def test_lexical_excludes_particles() -> None:
+    """Particle tags (JKS, JKO, etc.) are excluded from lexical results."""
+    qa, _ = _build_analyzer(
+        [
+            ("서울", "NNP"),
+            ("이", "JKS"),
+            ("좋다", "VA"),
+        ]
+    )
+    result = qa.analyze("서울이 좋다", QueryTarget.LEXICAL)
+    assert isinstance(result, LexicalQueryResult)
+    assert "서울" in result.keywords
+    assert "이" not in result.keywords
+    assert "좋다" not in result.keywords
+
+
+def test_lexical_includes_nng_nnp() -> None:
+    """NNG (common noun) and NNP (proper noun) pass through the POS filter."""
+    qa, _ = _build_analyzer(
+        [
+            ("한국어", "NNG"),
+            ("서울", "NNP"),
+            ("처리", "NNG"),
+            ("에서", "JKB"),
+        ]
+    )
+    result = qa.analyze("한국어 서울 처리 에서", QueryTarget.LEXICAL)
+    assert isinstance(result, LexicalQueryResult)
+    assert "한국어" in result.keywords
+    assert "서울" in result.keywords
+    assert "처리" in result.keywords
+    assert "에서" not in result.keywords
+
+
+# ---------------------------------------------------------------------------
+# Forbidden imports
+# ---------------------------------------------------------------------------
+
+
 def test_query_analyzer_does_not_import_retrieval_core() -> None:
     """Static AST check: ``query_analyzer.py`` does not touch forbidden packages."""
     forbidden = {"retrieval_core", "guardrail_core", "chatbot_contracts"}

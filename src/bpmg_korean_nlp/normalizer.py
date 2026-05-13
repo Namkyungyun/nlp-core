@@ -6,7 +6,8 @@ analysis:
 
     NFC  →  Unicode whitespace folding  →  whitespace collapse  →
     soynlp ``repeat_normalize``  →  (optional) hanja → hangul  →
-    (optional) user-supplied regex substitutions
+    (optional) user-supplied regex substitutions  →
+    (optional) noise strip (punctuation / symbols / emoji / jamo emoticons)
 
 The default settings — ``hanja_to_hangul=False`` and an always-on NFC plus
 ``repeat_normalize`` step — are locked by team agreement and must not be
@@ -34,6 +35,12 @@ _REPEAT_NUM: Final[int] = 2
 _MULTI_SPACE_RE: Final[re.Pattern[str]] = re.compile(r" +")
 _UNICODE_WS_RE: Final[regex.Pattern[str]] = regex.compile(r"\s")
 
+# strip_noise=True 시 적용
+_PUNCT_SYMBOL_RE: Final[regex.Pattern[str]] = regex.compile(r"[\p{P}\p{S}]")
+_JAMO_NOISE_RE: Final[regex.Pattern[str]] = regex.compile(
+    r"[ㄱ-ㆎㅥ-ㆆ]+"  # 한글 자모 (완성 음절 제외)
+)
+
 
 class KoreanNormalizer:
     """Deterministic Korean text normalizer.
@@ -50,20 +57,25 @@ class KoreanNormalizer:
             argument is silently treated as ``False``.
         custom_substitutions: Optional ordered list of ``(pattern, replacement)``
             tuples applied with :func:`re.sub` after the rest of the pipeline.
+        strip_noise: When ``True``, punctuation, symbols, emoji, and standalone
+            Hangul jamo (e.g. ``ㅋ``, ``ㅎ``) are removed after the rest of the
+            pipeline. Defaults to ``False`` to preserve existing behaviour.
 
     Raises:
         InvalidInputError: If :meth:`normalize` is given a ``None`` value or
             any non-``str`` input.
     """
 
-    __slots__ = ("_custom_substitutions", "_hanja_to_hangul")
+    __slots__ = ("_custom_substitutions", "_hanja_to_hangul", "_strip_noise")
 
     def __init__(
         self,
         hanja_to_hangul: bool = False,
         custom_substitutions: list[tuple[str, str]] | None = None,
+        strip_noise: bool = False,
     ) -> None:
         self._hanja_to_hangul: bool = hanja_to_hangul
+        self._strip_noise: bool = strip_noise
         self._custom_substitutions: tuple[tuple[str, str], ...] = (
             tuple(custom_substitutions) if custom_substitutions else ()
         )
@@ -102,6 +114,11 @@ class KoreanNormalizer:
 
         for pattern, replacement in self._custom_substitutions:
             out = re.sub(pattern, replacement, out)
+
+        if self._strip_noise:
+            out = _PUNCT_SYMBOL_RE.sub(" ", out)
+            out = _JAMO_NOISE_RE.sub(" ", out)
+            out = _MULTI_SPACE_RE.sub(" ", out).strip()
 
         return out
 

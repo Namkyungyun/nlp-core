@@ -164,8 +164,9 @@ class MeCabTokenizer:
 
         Args:
             text: Input string. ``""`` is valid and returns ``[]``.
-            pos_filter: If given, only morphemes whose Sejong POS tag is
-                in the set are kept. ``None`` keeps every POS.
+            pos_filter: If given, only morphemes whose primary Sejong POS tag is
+                in the set are kept. Compound tags (e.g. ``"NNG+JKS"``) are matched
+                on their first component. ``None`` keeps every POS.
             remove_stopwords: When ``True``, drop tokens whose surface
                 form is in *stopwords* (or :data:`DEFAULT_STOPWORDS` if
                 *stopwords* is ``None``).
@@ -192,7 +193,7 @@ class MeCabTokenizer:
 
         result: list[str] = []
         for surface, pos in morphs:
-            if pos_filter is not None and pos not in pos_filter:
+            if pos_filter is not None and pos.split("+")[0] not in pos_filter:
                 continue
             if active_stopwords is not None and surface in active_stopwords:
                 continue

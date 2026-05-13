@@ -127,7 +127,7 @@ class FakeTokenizer:
         )
         out: list[str] = []
         for surface, pos in self._tokens:
-            if pos_filter is not None and pos not in pos_filter:
+            if pos_filter is not None and pos.split("+")[0] not in pos_filter:
                 continue
             if active_stop is not None and surface in active_stop:
                 continue

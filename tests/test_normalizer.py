@@ -124,3 +124,54 @@ def test_combined_pipeline(normalizer: KoreanNormalizer) -> None:
     """All locked stages run in order on a representative messy input."""
     raw = "  ㅋㅋㅋㅋ　안녕  하세요   "
     assert normalizer.normalize(raw) == "ㅋㅋ 안녕 하세요"
+
+
+# ---------------------------------------------------------------------------
+# strip_noise option
+# ---------------------------------------------------------------------------
+
+
+def test_strip_noise_removes_punctuation() -> None:
+    """With ``strip_noise=True``, punctuation (!, ?, .) is removed."""
+    nz = KoreanNormalizer(strip_noise=True)
+    out = nz.normalize("안녕하세요! 반갑습니다?")
+    assert "!" not in out
+    assert "?" not in out
+    # Core text should remain
+    assert "안녕하세요" in out
+    assert "반갑습니다" in out
+
+
+def test_strip_noise_removes_emoji() -> None:
+    """With ``strip_noise=True``, emoji characters are removed."""
+    nz = KoreanNormalizer(strip_noise=True)
+    out = nz.normalize("좋아요😀 대박👍")
+    assert "😀" not in out
+    assert "👍" not in out
+    assert "좋아요" in out
+    assert "대박" in out
+
+
+def test_strip_noise_removes_jamo_emoticon() -> None:
+    """With ``strip_noise=True``, standalone jamo (ㅋㅋ, ㅠㅠ) are removed."""
+    nz = KoreanNormalizer(strip_noise=True)
+    out = nz.normalize("재밌다ㅋㅋ 슬프다ㅠㅠ")
+    assert "ㅋ" not in out
+    assert "ㅠ" not in out
+    assert "재밌다" in out
+    assert "슬프다" in out
+
+
+def test_strip_noise_default_off() -> None:
+    """Default ``strip_noise=False`` preserves punctuation, emoji, and jamo."""
+    nz = KoreanNormalizer()  # strip_noise defaults to False
+    out = nz.normalize("안녕! 😀 ㅋㅋㅋ")
+    assert "!" in out
+    assert "😀" in out
+    assert "ㅋㅋ" in out
+
+
+def test_strip_noise_empty_string() -> None:
+    """Empty input with ``strip_noise=True`` still returns empty."""
+    nz = KoreanNormalizer(strip_noise=True)
+    assert nz.normalize("") == ""
