@@ -10,18 +10,21 @@
 
 ## 설치
 
-```bash
-pip install bpmg-korean-nlp
-```
-
-`KoreanNormalizer`의 `hanja_to_hangul=True` 옵션을 사용하려면 `hanja` 확장도 함께
-설치합니다 (기본값은 OFF이므로 일반 사용자에겐 불필요):
+본 SDK는 PyPI에 등록되어 있지 않습니다. Git URL로 설치합니다.
 
 ```bash
-pip install "bpmg-korean-nlp[hanja]"
+pip install "bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git"
 ```
 
-개발용 설치:
+> **GitLab 전환 예정**: 추후 private GitLab으로 이전 시 URL과 토큰 인증 방식이 변경됩니다.
+
+`hanja_to_hangul=True` 옵션이 필요한 경우:
+
+```bash
+pip install "bpmg-korean-nlp[hanja] @ git+https://github.com/Namkyungyun/nlp-core.git"
+```
+
+개발용 설치 (이 저장소를 직접 클론한 경우):
 
 ```bash
 uv pip install -e ".[dev]"
@@ -92,15 +95,14 @@ API 상세 설명은 [`GUIDE.md`](GUIDE.md)를, 기능 명세는 [`SPEC.md`](SPE
 
 `python-mecab-ko`는 설치 시 `python-mecab-ko-dic`(한국어 사전 번들)을 자동으로
 함께 받아옵니다. **Ubuntu / Docker 환경에서는 별도 시스템 패키지 없이**
-`pip install bpmg-korean-nlp` 한 줄로 동작합니다. 자세한 절차는 위 표의 각
-가이드를 참고하세요.
+git URL 한 줄로 동작합니다. 자세한 절차는 위 표의 각 가이드를 참고하세요.
 
 macOS는 Homebrew 사전 설치가 권장됩니다(사전 경로 자동 인식):
 
 ```bash
 # macOS only
 brew install mecab mecab-ko mecab-ko-dic
-pip install bpmg-korean-nlp
+pip install "bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git"
 ```
 
 ---

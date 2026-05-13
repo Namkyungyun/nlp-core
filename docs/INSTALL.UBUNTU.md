@@ -2,7 +2,10 @@
 
 `bpmg-korean-nlp`을 Ubuntu 22.04에서 설치하고 동작을 확인하는 가이드입니다.
 
-> **핵심 요약** — Ubuntu에서는 `pip install bpmg-korean-nlp` 한 줄이면 됩니다.
+> **핵심 요약** — Ubuntu에서는 git URL 한 줄이면 됩니다.
+> ```bash
+> pip install "bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git"
+> ```
 >
 > **이유 (두 가지)**
 > 1. `python-mecab-ko`는 Linux용으로 **`manylinux` 규격 wheel**을 제공합니다.
@@ -96,16 +99,18 @@ python -m pip install --upgrade pip
 
 ---
 
-## 4. `bpmg-korean-nlp` 설치 — 한 줄
+## 4. `bpmg-korean-nlp` 설치
+
+본 SDK는 PyPI에 등록되어 있지 않습니다. Git URL로 설치합니다.
 
 ```bash
-pip install bpmg-korean-nlp
+pip install "bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git"
 ```
 
 이 한 줄이 다음을 모두 수행합니다.
 
 - `bpmg-korean-nlp` 본체
-- `python-mecab-ko` (MeCab Python 바인딩)
+- `python-mecab-ko` (MeCab Python 바인딩 — `manylinux` wheel에 `libmecab.so` 번들)
 - `python-mecab-ko-dic` (**한국어 사전 번들** — wheel에 포함되어 함께 설치됨)
 - `soynlp`, `regex` 등 기타 런타임 의존성
 

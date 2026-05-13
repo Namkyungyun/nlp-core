@@ -32,15 +32,26 @@ from bpmg_korean_nlp import KoreanNormalizer, MeCabTokenizer, ...
 
 ## 1. 설치
 
+본 SDK는 PyPI에 등록되어 있지 않습니다. Git URL로 설치합니다.
+
 ```bash
 # 기본 설치
-pip install bpmg-korean-nlp
+pip install "bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git"
 
 # 한자→한글 변환 옵션 포함
-pip install "bpmg-korean-nlp[hanja]"
+pip install "bpmg-korean-nlp[hanja] @ git+https://github.com/Namkyungyun/nlp-core.git"
 
-# 개발 환경
+# 개발 환경 (저장소 직접 클론 후)
 uv pip install -e ".[dev]"
+```
+
+`pyproject.toml` / `requirements.txt`에 추가하는 경우:
+
+```toml
+# pyproject.toml
+dependencies = [
+    "bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git",
+]
 ```
 
 ### 시스템 의존성
@@ -53,11 +64,10 @@ uv pip install -e ".[dev]"
 brew install mecab mecab-ko mecab-ko-dic
 ```
 
-**Ubuntu 22.04**
+**Ubuntu 22.04 / Docker**
 
-```bash
-sudo apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
-```
+추가 시스템 패키지 불필요. `pip install` 만으로 완결됩니다.
+자세한 내용은 [INSTALL.UBUNTU.md](INSTALL.UBUNTU.md) / [INSTALL.DOCKER.md](INSTALL.DOCKER.md) 참고.
 
 ---
 

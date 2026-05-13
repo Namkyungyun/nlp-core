@@ -2,8 +2,11 @@
 
 `bpmg-korean-nlp`을 Docker 컨테이너에서 사용하는 가이드입니다.
 
-> **핵심 요약** — `python:3.12-slim` 베이스에서 `pip install bpmg-korean-nlp`
-> 한 줄이면 끝입니다.
+> **핵심 요약** — `python:3.12-slim` 베이스에서 git URL 한 줄이면 끝입니다.
+> ```dockerfile
+> RUN pip install --no-cache-dir \
+>     "bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git"
+> ```
 >
 > **이유 (두 가지)**
 > 1. `python-mecab-ko` Linux 배포판은 **`manylinux` 규격 wheel** 형식으로 제공됩니다.
@@ -13,7 +16,7 @@
 > 2. `python-mecab-ko-dic` 패키지가 **한국어 사전 데이터**를 Python 패키지로 제공합니다.
 >
 > macOS에서는 이 번들링이 적용되지 않으므로 `brew install mecab mecab-ko mecab-ko-dic`
-> 사전 설치가 필요합니다. Docker/Linux에서만 pip 한 줄로 완결됩니다.
+> 사전 설치가 필요합니다. Docker/Linux에서만 git URL 한 줄로 완결됩니다.
 
 ---
 
@@ -23,7 +26,8 @@
 
 ```dockerfile
 FROM python:3.12-slim
-RUN pip install --no-cache-dir bpmg-korean-nlp
+RUN pip install --no-cache-dir \
+    "bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git"
 ```
 
 빌드:
@@ -81,9 +85,9 @@ CMD ["python", "-m", "app.main"]
 `requirements.txt` 예시:
 
 ```text
-bpmg-korean-nlp>=0.1.0
+bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git
 # 한자→한글 변환이 필요한 경우
-# bpmg-korean-nlp[hanja]>=0.1.0
+# bpmg-korean-nlp[hanja] @ git+https://github.com/Namkyungyun/nlp-core.git
 ```
 
 ---
@@ -101,7 +105,8 @@ WORKDIR /build
 RUN pip install --no-cache-dir --upgrade pip wheel
 
 # wheel만 받아 캐시
-RUN pip wheel --no-cache-dir --wheel-dir=/wheels bpmg-korean-nlp
+RUN pip wheel --no-cache-dir --wheel-dir=/wheels \
+    "bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git"
 
 # ── runtime ──
 FROM python:3.12-slim AS runtime

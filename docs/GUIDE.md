@@ -6,8 +6,19 @@ Python SDK입니다. 텍스트 정규화, MeCab 형태소 분석, 쿼리 변환(
 
 ## 설치
 
+본 SDK는 PyPI에 등록되어 있지 않습니다. Git URL로 설치합니다.
+
 ```bash
-pip install bpmg-korean-nlp
+pip install "bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git"
+```
+
+`pyproject.toml` 또는 `requirements.txt`에 추가하는 경우:
+
+```toml
+# pyproject.toml
+dependencies = [
+    "bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git",
+]
 ```
 
 `MeCabTokenizer`는 시스템 MeCab 사전이 필요합니다.
