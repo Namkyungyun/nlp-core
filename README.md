@@ -27,35 +27,6 @@ pip install "bpmg-korean-nlp[hanja]"
 uv pip install -e ".[dev]"
 ```
 
-### 시스템 의존성 — MeCab
-
-본 SDK는 `python-mecab-ko`를 통해 MeCab 형태소 분석기에 의존합니다. 플랫폼별
-시스템 패키지를 먼저 설치하세요.
-
-**macOS (Homebrew)**
-
-```bash
-brew install mecab mecab-ko mecab-ko-dic
-```
-
-**Ubuntu 22.04 / Debian**
-
-```bash
-sudo apt-get update
-sudo apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
-# mecab-ko-dic은 별도 빌드 또는 wheel 번들 사전 사용
-```
-
-**Docker (Ubuntu 22.04 base)**
-
-```dockerfile
-FROM python:3.12-slim
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        mecab libmecab-dev mecab-ipadic-utf8 build-essential \
-    && rm -rf /var/lib/apt/lists/*
-RUN pip install bpmg-korean-nlp
-```
-
 사전 가용성은 SDK가 부팅 시 `check_mecab_dict()`로 확인할 수 있습니다.
 
 ---
@@ -88,6 +59,69 @@ hybrid = analyzer.analyze("세종대학교 도서관 위치", QueryTarget.HYBRID
 ```
 
 API 상세 설명은 [`GUIDE.md`](GUIDE.md)를, 기능 명세는 [`SPEC.md`](SPEC.md)를 참조하세요.
+
+---
+
+## Environment
+
+| 항목 | 내용 |
+|---|---|
+| **Python** | 3.12 이상 |
+| **OS** | macOS (Homebrew), Ubuntu 22.04 / Debian, Docker (Linux slim) |
+| **패키지 매니저** | `pip` / `uv` |
+| **빌드 백엔드** | [Hatchling](https://hatch.pypa.io/) (PEP 517) |
+| **패키지 레이아웃** | src layout (`src/bpmg_korean_nlp/`) |
+| **타입 선언** | PEP 561 (`py.typed` 포함) |
+
+### 시스템 의존성 — MeCab
+
+MeCab 형태소 분석기는 Python 패키지 외에 OS 수준 바이너리가 필요합니다.
+
+| 플랫폼 | 설치 명령 |
+|---|---|
+| macOS (Homebrew) | `brew install mecab mecab-ko mecab-ko-dic` |
+| Ubuntu 22.04 | `sudo apt-get install -y mecab libmecab-dev mecab-ipadic-utf8` |
+| Docker | 아래 Dockerfile 참고 |
+
+```dockerfile
+FROM python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        mecab libmecab-dev mecab-ipadic-utf8 build-essential \
+    && rm -rf /var/lib/apt/lists/*
+RUN pip install bpmg-korean-nlp
+```
+
+---
+
+## Tech Stack
+
+### Core NLP
+
+| 컴포넌트 | 기술 | 역할 |
+|---|---|---|
+| 형태소 분석기 | [MeCab](https://taku910.github.io/mecab/) + [mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic) | 세종 품사 태그 기반 한국어 형태소 분석 |
+| Python 바인딩 | [`python-mecab-ko`](https://pypi.org/project/python-mecab-ko/) | MeCab C++ 라이브러리 Python 래퍼 |
+| 반복 문자 축약 | [`soynlp`](https://github.com/lovit/soynlp) `repeat_normalize` | "ㅋㅋㅋㅋ" → "ㅋㅋ" |
+| 유니코드 정규화 | [`regex`](https://pypi.org/project/regex/) | `\p{P}`, `\p{S}` 등 유니코드 속성 패턴, 전각·특수 공백 처리 |
+
+### 품질 도구
+
+| 도구 | 버전 | 용도 |
+|---|---|---|
+| [`ruff`](https://docs.astral.sh/ruff/) | `>= 0.4` | 린트 + 포맷 (E/F/I/N/W/UP/B/SIM/RUF) |
+| [`mypy`](https://mypy-lang.org/) | `>= 1.10` | `--strict` 정적 타입 검사 |
+| [`pytest`](https://pytest.org/) | `>= 8.0` | 단위·통합·성능·골든셋 테스트 |
+| `pytest-cov` | — | 라인 커버리지 (목표 90%+) |
+| `pytest-benchmark` | — | 성능 회귀 감지 |
+| `scripts/check_imports.py` | — | 금지 import 정적 차단 (CI) |
+
+### 성능 기준
+
+| 측정 지점 | 기준 |
+|---|---|
+| `tokenize()` p99 | < 5 ms |
+| `analyze(HYBRID)` p99 | < 100 ms |
+| `tokenize()` 1,000건 일괄 | < 2 초 |
 
 ---
 
