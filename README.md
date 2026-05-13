@@ -84,26 +84,22 @@ API 상세 설명은 [`GUIDE.md`](GUIDE.md)를, 기능 명세는 [`SPEC.md`](SPE
 
 ### MeCab 설치 — 플랫폼별
 
-> **Python SDK 사용법은 모든 환경에서 동일합니다.**
-> 차이는 MeCab 시스템 바이너리 사전 설치 여부뿐입니다.
+SDK 설치 방법(`pip install git+...`)은 모든 플랫폼에서 동일합니다.
+플랫폼마다 다른 것은 **MeCab C 라이브러리와 한국어 사전을 어떻게 공급하느냐**입니다.
+
+| 플랫폼 | MeCab 공급 방식 | 별도 설치 |
+|---|---|---|
+| **macOS** | 시스템 직접 설치 필요 | `brew install mecab mecab-ko mecab-ko-dic` |
+| **Ubuntu 22.04** | `python-mecab-ko` manylinux wheel 내부 번들 | 불필요 |
+| **Docker** (`python:3.12-slim`) | 동일 (manylinux wheel 번들) | 불필요 |
+
+각 플랫폼별 상세 절차:
 
 | 플랫폼 | 가이드 |
 |---|---|
-| macOS (Homebrew) | 아래 참고 |
+| macOS | [docs/INSTALL.MACOS.md](docs/INSTALL.MACOS.md) |
 | Ubuntu 22.04 | [docs/INSTALL.UBUNTU.md](docs/INSTALL.UBUNTU.md) |
 | Docker | [docs/INSTALL.DOCKER.md](docs/INSTALL.DOCKER.md) |
-
-`python-mecab-ko`는 설치 시 `python-mecab-ko-dic`(한국어 사전 번들)을 자동으로
-함께 받아옵니다. **Ubuntu / Docker 환경에서는 별도 시스템 패키지 없이**
-git URL 한 줄로 동작합니다. 자세한 절차는 위 표의 각 가이드를 참고하세요.
-
-macOS는 Homebrew 사전 설치가 권장됩니다(사전 경로 자동 인식):
-
-```bash
-# macOS only
-brew install mecab mecab-ko mecab-ko-dic
-pip install "bpmg-korean-nlp @ git+https://github.com/Namkyungyun/nlp-core.git"
-```
 
 ---
 
