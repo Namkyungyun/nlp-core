@@ -1,6 +1,189 @@
-# TEST.LOCAL.md
+# 로컬 테스트 실행 가이드
 
-로컬 기능 테스트 내역서. 각 섹션의 명령을 그대로 복사해서 실행하면 됩니다.
+이 문서는 로컬 개발환경 구성을 마친 개발자가 **처음으로** 테스트를 돌릴 때 따라가는 가이드입니다.
+앞 절은 자동화 테스트, 뒤 절은 수동 기능 테스트(T-01 ~ T-24)입니다.
+
+---
+
+## 전제조건
+
+- [docs/LOCAL.README.md](./LOCAL.README.md)의 **Step 1 ~ 8 완료**
+- 작업 시작 시 가상환경 활성화:
+
+  ```bash
+  source .venv/bin/activate
+  ```
+
+- `which python` 결과가 `.../korean-nlp-core/.venv/bin/python`인지 확인
+
+> 모든 명령은 레포 루트(`korean-nlp-core/`)에서 실행합니다.
+
+---
+
+## 자동화 테스트 (권장 순서)
+
+아래 1 → 7 순서대로 실행하면 기능·품질·성능을 모두 점검할 수 있습니다.
+
+### 1. 전체 테스트 실행
+
+```bash
+pytest tests/ -v
+```
+
+**기대 결과**
+
+```
+269 passed, 2 skipped
+```
+
+> 스킵 2건은 `PyKoSpacing` 미설치 환경(권장 기본값)에서 발생하는 정상 스킵입니다.
+
+---
+
+### 2. 커버리지 확인
+
+```bash
+pytest tests/ --cov=src --cov-report=term-missing
+```
+
+**기대 결과**
+
+- 전체 라인 커버리지: **96% 이상**
+- 마지막 줄에 `TOTAL ... 96%` 형식으로 출력됨
+
+HTML 리포트가 필요하면:
+
+```bash
+pytest tests/ --cov=src --cov-report=html
+open htmlcov/index.html
+```
+
+CI에서 사용하는 임계치 검증:
+
+```bash
+pytest tests/ --cov=src --cov-report=term-missing --cov-fail-under=90
+```
+
+---
+
+### 3. 타입 검사 (mypy strict)
+
+```bash
+mypy --strict src/ tests/
+```
+
+**기대 결과**
+
+```
+Success: no issues found in NN source files
+```
+
+> 단 하나라도 `error:`가 나오면 CI가 실패합니다. 코드 수정 후 다시 실행하세요.
+
+---
+
+### 4. 린트 (ruff)
+
+```bash
+ruff check src tests
+```
+
+**기대 결과**
+
+```
+All checks passed!
+```
+
+자동 수정이 가능한 항목은 다음 명령으로 일괄 처리:
+
+```bash
+ruff check src tests --fix
+ruff format src tests
+```
+
+---
+
+### 5. 금지 import 검사
+
+본 SDK는 `retrieval-core`, `guardrail-core`, `chatbot-contracts` 등 상위 레이어 import가 금지되어 있습니다.
+
+```bash
+python scripts/check_imports.py src/
+```
+
+**기대 결과**
+
+```
+(오류 메시지 없음 — 종료 코드 0)
+```
+
+> 어떤 파일이 금지 모듈을 import하면 파일 경로와 라인 번호가 출력되고 비정상 종료합니다.
+
+---
+
+### 6. 성능 벤치마크
+
+본 SDK는 다음 성능 기준선을 만족해야 합니다.
+
+| 항목 | p99 기준 |
+|---|---|
+| `MeCabTokenizer.tokenize()` | < 5ms |
+| `QueryAnalyzer.analyze(..., HYBRID)` | < 100ms |
+
+`pytest-benchmark`로 측정:
+
+```bash
+# 벤치마크 마커가 붙은 테스트만 실행
+pytest tests/ -v -m benchmark --benchmark-only
+
+# 통계와 함께 출력 (min/mean/median/max/stddev)
+pytest tests/ -v -m benchmark --benchmark-only --benchmark-columns=min,mean,median,max,stddev
+
+# 결과 저장 후 비교
+pytest tests/ -m benchmark --benchmark-only --benchmark-save=baseline
+pytest tests/ -m benchmark --benchmark-only --benchmark-compare=baseline
+```
+
+> `pytest-benchmark`가 설치되어 있지 않으면 `pip install pytest-benchmark` 후 다시 실행하세요.
+
+---
+
+### 7. 모듈별 테스트
+
+세부 모듈만 빠르게 확인하고 싶을 때 사용합니다.
+
+```bash
+pytest tests/test_normalizer.py -v       # KoreanNormalizer
+pytest tests/test_tokenizer.py -v        # MeCabTokenizer
+pytest tests/test_query_analyzer.py -v   # QueryAnalyzer
+pytest tests/test_jamo_utils.py -v       # Jamo 유틸리티
+pytest tests/test_golden.py -v           # 골든셋 80건
+```
+
+단일 테스트만 실행:
+
+```bash
+pytest tests/test_tokenizer.py::test_tokenize_basic -v
+```
+
+---
+
+## 실패 시 확인 사항
+
+| 증상 | 확인 |
+|---|---|
+| `MeCabNotAvailableError` / `RuntimeError: dict not found` | `python -c "from bpmg_korean_nlp import check_mecab_dict; print(check_mecab_dict())"` 출력 확인. `available: False`이면 [LOCAL.README.md Step 3 / Step 7](./LOCAL.README.md) 재수행 |
+| `ModuleNotFoundError: bpmg_korean_nlp` | venv 활성화 확인 → `which python` 결과가 `.venv/bin/python`인가? `pip install -e ".[dev]"` 재실행 |
+| `ModuleNotFoundError: mecab` 또는 `python-mecab-ko` 관련 | `pip show python-mecab-ko` 로 설치 여부 확인. 없으면 `pip install -e ".[dev]"` 재실행 |
+| Apple Silicon에서 사전 경로가 `/usr/local/...`로 잡힘 | 일반 `mecab`이 잔존. `brew uninstall mecab` 후 `brew install mecab-ko mecab-ko-dic` |
+| `269 passed` 대신 다수 skip | `PyKoSpacing` 의존성 누락은 정상 (2건 skip). 그 이상은 venv가 잘못된 Python을 가리키는 경우가 많음 |
+| 커버리지 96% 미만 | 신규 코드에 테스트가 빠졌는지 점검. `--cov-report=term-missing` 출력의 Missing 컬럼을 확인 |
+
+---
+
+## 수동 기능 테스트 (T-01 ~ T-24)
+
+각 섹션의 명령을 그대로 복사해서 실행하면 됩니다.
 
 > **전제 조건**: `.venv` 활성화 및 `pip install -e ".[dev]"` 완료 상태.
 >
@@ -145,7 +328,7 @@ cases = [
     '  앞뒤 공백  ',
     '\xa0비공백\xa0',
     '　전각　공백',
-    ' EM SPACE',
+    ' EM SPACE',
 ]
 for text in cases:
     print(repr(text), '->', repr(norm.normalize(text)))
@@ -159,10 +342,10 @@ EOF
 '  앞뒤 공백  ' -> '앞뒤 공백'
 '\xa0비공백\xa0' -> '비공백'
 '　전각　공백' -> '전각 공백'
-' EM SPACE' -> 'EM SPACE'
+' EM SPACE' -> 'EM SPACE'
 ```
 
-> `\xa0` = NO-BREAK SPACE, 　 `= 전각 공백,`   = EM SPACE.  
+> `\xa0` = NO-BREAK SPACE, 　 `= 전각 공백,`   = EM SPACE.  
 > 모든 유니코드 공백 문자를 ASCII 공백으로 변환 후, 연속 공백을 단일 공백으로 축약합니다.
 
 ---
@@ -885,7 +1068,7 @@ type     : DictCheckResult
 ## 전체 자동화 테스트 실행
 
 ```bash
-# 전체 (PyKoSpacing 없는 환경에서 51개 스킵 예상)
+# 전체 (PyKoSpacing 없는 환경에서 2건 skip 예상)
 pytest tests/ -v
 
 # 커버리지 포함
