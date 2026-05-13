@@ -1,0 +1,282 @@
+"""Wrapper-level tests for :class:`MeCabTokenizer` using a stub mecab module.
+
+The real ``python-mecab-ko`` binding requires system C dependencies that
+may not be available everywhere; we still want full coverage of the
+wrapper logic (POS dispatch, offset math, error paths). These tests
+install a stub module at ``sys.modules['mecab']`` so the wrapper exercises
+the same code paths it would in production.
+"""
+
+from __future__ import annotations
+
+import sys
+from collections.abc import Iterator
+from typing import Any, ClassVar
+
+import pytest
+
+from bpmg_korean_nlp.exceptions import InvalidInputError, MeCabNotAvailableError
+from bpmg_korean_nlp.models import MorphToken
+
+
+class _StubMeCabBase:
+    """A configurable MeCab impostor honoring the ``pos()`` contract."""
+
+    pos_results: ClassVar[list[tuple[str, str]]] = []
+    raise_on_pos: ClassVar[Exception | None] = None
+    init_failure: ClassVar[Exception | None] = None
+
+    def __init__(
+        self,
+        dictionary_path: str | None = None,
+        user_dictionary_path: str | None = None,
+    ) -> None:
+        if self.init_failure is not None:
+            raise self.init_failure
+        self.dictionary_path = dictionary_path
+        self.user_dictionary_path = user_dictionary_path
+
+    def pos(self, text: str) -> list[tuple[str, str]]:
+        if self.raise_on_pos is not None:
+            raise self.raise_on_pos
+        return list(self.pos_results)
+
+
+def _make_stub_module(klass: type) -> Any:
+    """Build a module-shaped object exposing ``MeCab``."""
+
+    class _StubModule:
+        MeCab = klass
+
+    return _StubModule()
+
+
+def _patch_mecab(monkeypatch: pytest.MonkeyPatch, klass: type) -> None:
+    """Install *klass* as ``mecab.MeCab`` for the duration of the test."""
+    monkeypatch.setitem(sys.modules, "mecab", _make_stub_module(klass))
+
+
+@pytest.fixture(autouse=True)
+def _reset_tokenizer_cache() -> Iterator[None]:
+    """Drop the singleton cache around every test so stubs take effect."""
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    MeCabTokenizer.reset_instances()
+    yield
+    MeCabTokenizer.reset_instances()
+
+
+def _make_stub(
+    pos_results: list[tuple[str, str]],
+    **overrides: Any,
+) -> type:
+    """Return a fresh ``_StubMeCabBase`` subclass with the given config."""
+    attrs: dict[str, Any] = {"pos_results": list(pos_results)}
+    attrs.update(overrides)
+    return type("_StubMeCab", (_StubMeCabBase,), attrs)
+
+
+def test_tokenize_uses_mecab_pos_results(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Surface tokens come from the underlying ``pos()`` output."""
+    _patch_mecab(
+        monkeypatch,
+        _make_stub([("한국어", "NNG"), ("처리", "NNG")]),
+    )
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    tok = MeCabTokenizer()
+    assert tok.tokenize("한국어 처리") == ["한국어", "처리"]
+
+
+def test_tokenize_empty_string_skips_mecab(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Empty input returns ``[]`` without invoking ``pos()``."""
+    _patch_mecab(
+        monkeypatch,
+        _make_stub([("never", "NNG")], raise_on_pos=RuntimeError("must not run")),
+    )
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    assert MeCabTokenizer().tokenize("") == []
+
+
+def test_tokenize_pos_filter(monkeypatch: pytest.MonkeyPatch) -> None:
+    """POS filter retains only morphemes whose tag is in the set."""
+    _patch_mecab(
+        monkeypatch,
+        _make_stub([("서울", "NNP"), ("에서", "JKB"), ("일", "NNG")]),
+    )
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    out = MeCabTokenizer().tokenize("ignored", pos_filter=frozenset({"NNG", "NNP"}))
+    assert out == ["서울", "일"]
+
+
+def test_tokenize_remove_stopwords_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """With ``remove_stopwords=True`` and the default set, particles drop."""
+    _patch_mecab(
+        monkeypatch,
+        _make_stub([("나", "NP"), ("는", "JX"), ("학생", "NNG")]),
+    )
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    out = MeCabTokenizer().tokenize("나는 학생", remove_stopwords=True)
+    assert "는" not in out
+
+
+def test_tokenize_custom_stopwords(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A caller-supplied stopword set overrides the default."""
+    _patch_mecab(
+        monkeypatch,
+        _make_stub([("한국어", "NNG"), ("처리", "NNG")]),
+    )
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    out = MeCabTokenizer().tokenize(
+        "한국어 처리",
+        remove_stopwords=True,
+        stopwords=frozenset({"한국어"}),
+    )
+    assert "한국어" not in out
+    assert "처리" in out
+
+
+def test_analyze_offsets(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Offsets reflect substring location in the original text."""
+    _patch_mecab(
+        monkeypatch,
+        _make_stub([("한국어", "NNG"), ("처리", "NNG")]),
+    )
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    text = "한국어 처리"
+    morphs = MeCabTokenizer().analyze(text)
+    assert [(m.start, m.end) for m in morphs] == [(0, 3), (4, 6)]
+    assert all(isinstance(m, MorphToken) for m in morphs)
+
+
+def test_analyze_offset_fallback_when_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When MeCab emits a token that isn't a substring, the cursor still advances."""
+    _patch_mecab(
+        monkeypatch,
+        _make_stub([("xyz", "NNG"), ("처리", "NNG")]),
+    )
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    morphs = MeCabTokenizer().analyze("한국어 처리")
+    # "xyz" not in text → start defaults to the running cursor, end advances.
+    assert morphs[0].surface == "xyz"
+    assert morphs[1].surface == "처리"
+    assert morphs[1].end > morphs[1].start
+
+
+def test_analyze_empty_string(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_mecab(
+        monkeypatch,
+        _make_stub([], raise_on_pos=RuntimeError("must not run")),
+    )
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    assert MeCabTokenizer().analyze("") == []
+
+
+def test_mecab_pos_failure_raises_typed_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Any exception from ``pos()`` becomes :class:`MeCabNotAvailableError`."""
+    _patch_mecab(
+        monkeypatch,
+        _make_stub([], raise_on_pos=RuntimeError("segfault")),
+    )
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    with pytest.raises(MeCabNotAvailableError):
+        MeCabTokenizer().tokenize("anything")
+
+
+def test_mecab_init_failure_raises_typed_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A bogus init turns into :class:`MeCabNotAvailableError`."""
+    stub = _make_stub([], init_failure=RuntimeError("dict not found"))
+    _patch_mecab(monkeypatch, stub)
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    with pytest.raises(MeCabNotAvailableError):
+        MeCabTokenizer()
+
+
+def test_singleton_per_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Different ``dict_path`` values produce different singletons."""
+    _patch_mecab(monkeypatch, _make_stub([("a", "NNG")]))
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    a = MeCabTokenizer(dict_path=None)
+    b = MeCabTokenizer(dict_path="/explicit")
+    assert a is not b
+    # Same config → same instance.
+    a2 = MeCabTokenizer(dict_path=None)
+    assert a is a2
+
+
+def test_get_instance_alias_returns_same_object(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_mecab(monkeypatch, _make_stub([("a", "NNG")]))
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    assert MeCabTokenizer() is MeCabTokenizer.get_instance()
+
+
+def test_dict_path_and_user_dict_path_properties(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The configured paths are exposed via properties."""
+    _patch_mecab(monkeypatch, _make_stub([("a", "NNG")]))
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    tok = MeCabTokenizer(dict_path="/d", user_dict_path="/u")
+    assert tok.dict_path == "/d"
+    assert tok.user_dict_path == "/u"
+
+
+def test_input_validation_rejects_non_str(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_mecab(monkeypatch, _make_stub([]))
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    tok = MeCabTokenizer()
+    with pytest.raises(InvalidInputError):
+        tok.tokenize(123)  # type: ignore[arg-type]
+    with pytest.raises(InvalidInputError):
+        tok.analyze(None)  # type: ignore[arg-type]
+
+
+def test_malformed_pos_entries_filtered(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Malformed entries from ``pos()`` are silently discarded."""
+
+    class _MisbehavingMeCab(_StubMeCabBase):
+        pos_results: ClassVar[list[tuple[str, str]]] = []
+
+        def pos(self, text: str) -> list[Any]:
+            return [
+                ("ok", "NNG"),
+                (None, "NNG"),
+                ("bad",),
+                42,
+                ("end", "NNG"),
+            ]
+
+    _patch_mecab(monkeypatch, _MisbehavingMeCab)
+    from bpmg_korean_nlp.tokenizer import MeCabTokenizer
+
+    out = MeCabTokenizer().tokenize("...")
+    assert out == ["ok", "end"]

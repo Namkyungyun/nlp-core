@@ -1,0 +1,169 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bpmg-korean-nlp"
+version = "0.1.0"
+description = "한국어 NLP 전처리 SDK — 정규화·띄어쓰기·형태소 분석·쿼리 변환"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [
+    { name = "bpmg bpmg-korean-nlp team" },
+]
+keywords = [
+    "korean",
+    "nlp",
+    "tokenizer",
+    "mecab",
+    "spacing",
+    "morphology",
+    "query-analysis",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: Korean",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+    "Typing :: Typed",
+]
+dependencies = [
+    "python-mecab-ko",
+    "kss",
+    "soynlp",
+    "regex",
+]
+
+[project.optional-dependencies]
+# Optional Hanja → Hangul transliteration (KoreanNormalizer(hanja_to_hangul=True))
+hanja = [
+    "hanja",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov",
+    "pytest-benchmark",
+    "mypy>=1.10",
+    "ruff>=0.4",
+    "build",
+]
+
+# -----------------------------------------------------------------------------
+# Build (hatchling) — src layout
+# -----------------------------------------------------------------------------
+[tool.hatch.build.targets.wheel]
+packages = ["src/bpmg_korean_nlp"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/bpmg_korean_nlp/py.typed" = "bpmg_korean_nlp/py.typed"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/bpmg_korean_nlp",
+    "README.md",
+    "LICENSE",
+    "pyproject.toml",
+]
+
+# -----------------------------------------------------------------------------
+# mypy --strict
+# -----------------------------------------------------------------------------
+[tool.mypy]
+strict = true
+python_version = "3.12"
+mypy_path = "src"
+namespace_packages = true
+explicit_package_bases = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unreachable = true
+disallow_untyped_decorators = true
+no_implicit_reexport = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "mecab.*",
+    "pykospacing.*",
+    "kss.*",
+    "soynlp.*",
+    "hanja.*",
+]
+ignore_missing_imports = true
+
+# -----------------------------------------------------------------------------
+# ruff
+# -----------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+extend-exclude = [
+    "build",
+    "dist",
+    ".mypy_cache",
+    ".ruff_cache",
+    "htmlcov",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "RUF", # ruff-specific
+]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["N802", "N803", "N806"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["bpmg_korean_nlp"]
+
+# -----------------------------------------------------------------------------
+# pytest
+# -----------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+]
+markers = [
+    "golden: golden input/output dataset tests",
+    "perf: performance baseline tests",
+    "slow: tests that load heavy models (spacing, mecab dict)",
+]
+
+# -----------------------------------------------------------------------------
+# coverage
+# -----------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["src/bpmg_korean_nlp"]
+branch = false
+parallel = false
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]

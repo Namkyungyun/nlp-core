@@ -1,0 +1,96 @@
+{"id": "nor_001", "type": "normalize", "input": "조사랑어미차이가뭐예요ㅋㅋㅋㅋ", "expected": "조사랑어미차이가뭐예요ㅋㅋ"}
+{"id": "nor_002", "type": "normalize", "input": "안녕하세요ㅎㅎㅎㅎ", "expected": "안녕하세요ㅎㅎ"}
+{"id": "nor_003", "type": "normalize", "input": "가   나     다", "expected": "가 나 다"}
+{"id": "nor_004", "type": "normalize", "input": "   앞뒤 공백   ", "expected": "앞뒤 공백"}
+{"id": "nor_005", "type": "normalize", "input": "비표준 공백", "expected": "비표준 공백"}
+{"id": "nor_006", "type": "normalize", "input": "전각　공백", "expected": "전각 공백"}
+{"id": "nor_007", "type": "normalize", "input": "이모지😀섞임", "expected": "이모지😀섞임"}
+{"id": "nor_008", "type": "normalize", "input": "", "expected": ""}
+{"id": "nor_009", "type": "normalize", "input": "    \t  ", "expected": ""}
+{"id": "nor_010", "type": "normalize", "input": "ㅠㅠㅠㅠ", "expected": "ㅠㅠ"}
+{"id": "nor_011", "type": "normalize", "input": "와아아아아 좋다", "expected": "와아아 좋다"}
+{"id": "nor_012", "type": "normalize", "input": "한국어  처리", "expected": "한국어 처리"}
+{"id": "nor_013", "type": "normalize", "input": "Hello\t세계", "expected": "Hello 세계"}
+{"id": "nor_014", "type": "normalize", "input": "한자國家도 그대로", "expected": "한자國家도 그대로"}
+{"id": "nor_015", "type": "normalize", "input": "숫자 123456 포함", "expected": "숫자 123456 포함"}
+{"id": "nor_016", "type": "normalize", "input": "엄청\n\n많은\n줄바꿈", "expected": "엄청 많은 줄바꿈"}
+{"id": "jamo_001", "type": "jamo_roundtrip", "input": "한", "expected_choseong": "ㅎ"}
+{"id": "jamo_002", "type": "jamo_roundtrip", "input": "한국어", "expected_choseong": "ㅎㄱㅇ"}
+{"id": "jamo_003", "type": "jamo_roundtrip", "input": "안녕하세요", "expected_choseong": "ㅇㄴㅎㅅㅇ"}
+{"id": "jamo_004", "type": "jamo_roundtrip", "input": "Hello 세계", "expected_choseong": "Hello ㅅㄱ"}
+{"id": "jamo_005", "type": "jamo_roundtrip", "input": "서울특별시", "expected_choseong": "ㅅㅇㅌㅂㅅ"}
+{"id": "jamo_006", "type": "jamo_roundtrip", "input": "대한민국", "expected_choseong": "ㄷㅎㅁㄱ"}
+{"id": "jamo_007", "type": "jamo_roundtrip", "input": "감자튀김", "expected_choseong": "ㄱㅈㅌㄱ"}
+{"id": "jamo_008", "type": "jamo_roundtrip", "input": "꽃잎", "expected_choseong": "ㄲㅇ"}
+{"id": "jamo_009", "type": "jamo_roundtrip", "input": "2025년 새해", "expected_choseong": "2025ㄴ ㅅㅎ"}
+{"id": "jamo_010", "type": "jamo_roundtrip", "input": "", "expected_choseong": ""}
+{"id": "jamo_011", "type": "jamo_roundtrip", "input": "abc123", "expected_choseong": "abc123"}
+{"id": "jamo_012", "type": "jamo_roundtrip", "input": "쌍자음 ㄲㄸ", "expected_choseong": "ㅆㅈㅇ ㄲㄸ"}
+{"id": "tok_001", "type": "tokenize", "input": "조사랑 어미 차이가 뭐예요", "expected_contains": ["조사", "어미", "차이"]}
+{"id": "tok_002", "type": "tokenize", "input": "한국어 자연어 처리", "expected_contains": ["한국어", "자연어", "처리"]}
+{"id": "tok_003", "type": "tokenize", "input": "서울에서 일했다", "expected_contains": ["서울", "일"]}
+{"id": "tok_004", "type": "tokenize", "input": "대한민국 만세", "expected_contains": ["대한민국", "만세"]}
+{"id": "tok_005", "type": "tokenize", "input": "오늘 날씨가 좋다", "expected_contains": ["오늘", "날씨"]}
+{"id": "tok_006", "type": "tokenize", "input": "학생들은 도서관에 갔다", "expected_contains": ["학생", "도서관"]}
+{"id": "tok_007", "type": "tokenize", "input": "Python 프로그래밍 공부", "expected_contains": ["Python", "프로그래밍", "공부"]}
+{"id": "tok_008", "type": "tokenize", "input": "사과 배 귤 포도", "expected_contains": ["사과", "배", "귤", "포도"]}
+{"id": "tok_009", "type": "tokenize", "input": "비가 많이 내린다", "expected_contains": ["비"]}
+{"id": "tok_010", "type": "tokenize", "input": "회사원 김철수씨", "expected_contains": ["회사원"]}
+{"id": "tok_011", "type": "tokenize", "input": "친구와 함께 영화관 갔다", "expected_contains": ["친구", "영화관"]}
+{"id": "tok_012", "type": "tokenize", "input": "수업 시간 끝나고 만나자", "expected_contains": ["수업", "시간"]}
+{"id": "tok_013", "type": "tokenize", "input": "맛있는 김치찌개 먹기", "expected_contains": ["김치찌개"]}
+{"id": "tok_014", "type": "tokenize", "input": "내일 일정 확인 필요", "expected_contains": ["내일", "일정", "확인"]}
+{"id": "tok_015", "type": "tokenize", "input": "음악 듣기 좋아하는 사람", "expected_contains": ["음악", "사람"]}
+{"id": "tok_016", "type": "tokenize", "input": "여행 계획 세우기", "expected_contains": ["여행", "계획"]}
+{"id": "tok_017", "type": "tokenize", "input": "책 읽기 좋은 날", "expected_contains": ["책", "날"]}
+{"id": "tok_018", "type": "tokenize", "input": "운동 매일 30분", "expected_contains": ["운동", "30"]}
+{"id": "tok_019", "type": "tokenize", "input": "", "expected_contains": []}
+{"id": "tok_020", "type": "tokenize", "input": "테스트 문장입니다", "expected_contains": ["테스트", "문장"]}
+{"id": "spc_001", "type": "spacing", "input": "조사랑어미차이가뭐예요", "expected_contains": ["조사", "어미", "차이"]}
+{"id": "spc_002", "type": "spacing", "input": "한국어자연어처리", "expected_contains": ["한국어", "자연어", "처리"]}
+{"id": "spc_003", "type": "spacing", "input": "오늘날씨가좋다", "expected_contains": ["오늘", "날씨"]}
+{"id": "spc_004", "type": "spacing", "input": "서울특별시강남구", "expected_contains": ["서울", "강남구"]}
+{"id": "spc_005", "type": "spacing", "input": "안녕하세요반갑습니다", "expected_contains": ["안녕", "반갑"]}
+{"id": "spc_006", "type": "spacing", "input": "이메일주소를알려주세요", "expected_contains": ["이메일", "주소"]}
+{"id": "spc_007", "type": "spacing", "input": "회의는내일오후세시입니다", "expected_contains": ["회의", "내일"]}
+{"id": "spc_008", "type": "spacing", "input": "학교에서공부하고있어요", "expected_contains": ["학교", "공부"]}
+{"id": "spc_009", "type": "spacing", "input": "비가많이내려서우산이필요해요", "expected_contains": ["비", "우산"]}
+{"id": "spc_010", "type": "spacing", "input": "사과배귤포도", "expected_contains": ["사과"]}
+{"id": "spc_011", "type": "spacing", "input": "한국어 띄어쓰기 처리", "expected_contains": ["한국어", "띄어쓰기"]}
+{"id": "spc_012", "type": "spacing", "input": "", "expected": ""}
+{"id": "spc_013", "type": "spacing", "input": "친구들과영화를보러갔어요", "expected_contains": ["친구", "영화"]}
+{"id": "spc_014", "type": "spacing", "input": "맛있는음식을먹고싶다", "expected_contains": ["맛있", "음식"]}
+{"id": "spc_015", "type": "spacing", "input": "여행계획세우기시작했어요", "expected_contains": ["여행", "계획"]}
+{"id": "qa_lex_001", "type": "analyze_query", "target": "lexical", "input": "조사랑 어미 차이가 뭐예요", "expected_keywords_contains": ["조사", "어미", "차이"]}
+{"id": "qa_lex_002", "type": "analyze_query", "target": "lexical", "input": "서울에서 가장 좋은 식당", "expected_keywords_contains": ["서울", "식당"]}
+{"id": "qa_lex_003", "type": "analyze_query", "target": "lexical", "input": "한국어 자연어 처리 분야", "expected_keywords_contains": ["한국어", "자연어", "처리"]}
+{"id": "qa_lex_004", "type": "analyze_query", "target": "lexical", "input": "오늘 점심 메뉴 추천", "expected_keywords_contains": ["오늘", "점심", "메뉴"]}
+{"id": "qa_lex_005", "type": "analyze_query", "target": "lexical", "input": "", "expected_keywords_contains": []}
+{"id": "qa_lex_006", "type": "analyze_query", "target": "lexical", "input": "비가 와요", "expected_keywords_contains": ["비"]}
+{"id": "qa_sem_001", "type": "analyze_query", "target": "semantic", "input": "조사랑 어미 차이가 뭐예요", "expected_query_contains": "어미"}
+{"id": "qa_sem_002", "type": "analyze_query", "target": "semantic", "input": "맛있는 식당 알려주세요", "expected_query_contains": "식당"}
+{"id": "qa_sem_003", "type": "analyze_query", "target": "semantic", "input": "내일 날씨 어때요", "expected_query_contains": "날씨"}
+{"id": "qa_sem_004", "type": "analyze_query", "target": "semantic", "input": "한국어 자연어 처리", "expected_query_contains": "자연어"}
+{"id": "qa_sem_005", "type": "analyze_query", "target": "semantic", "input": "", "expected_query_contains": ""}
+{"id": "qa_sem_006", "type": "analyze_query", "target": "semantic", "input": "안녕하세요 반갑습니다", "expected_query_contains": "안녕"}
+{"id": "qa_gph_001", "type": "analyze_query", "target": "graph", "input": "서울에서 일했다", "expected_seeds_contains": ["서울"]}
+{"id": "qa_gph_002", "type": "analyze_query", "target": "graph", "input": "한국어 자연어 처리", "expected_seeds_contains": ["한국어", "자연어"]}
+{"id": "qa_gph_003", "type": "analyze_query", "target": "graph", "input": "대한민국 만세", "expected_seeds_contains": ["대한민국"]}
+{"id": "qa_gph_004", "type": "analyze_query", "target": "graph", "input": "친구와 영화를 봤다", "expected_seeds_contains": ["친구", "영화"]}
+{"id": "qa_gph_005", "type": "analyze_query", "target": "graph", "input": "", "expected_seeds_contains": []}
+{"id": "qa_gph_006", "type": "analyze_query", "target": "graph", "input": "음악 듣기", "expected_seeds_contains": ["음악"]}
+{"id": "qa_hyb_001", "type": "analyze_query", "target": "hybrid", "input": "서울 맛집 추천", "expected_keywords_contains": ["서울", "맛집"], "expected_seeds_contains": ["서울", "맛집"], "expected_query_contains": "맛집"}
+{"id": "qa_hyb_002", "type": "analyze_query", "target": "hybrid", "input": "한국어 처리", "expected_keywords_contains": ["한국어", "처리"], "expected_seeds_contains": ["한국어", "처리"], "expected_query_contains": "처리"}
+{"id": "qa_hyb_003", "type": "analyze_query", "target": "hybrid", "input": "오늘 일정", "expected_keywords_contains": ["오늘", "일정"], "expected_seeds_contains": ["일정"], "expected_query_contains": "일정"}
+{"id": "qa_hyb_004", "type": "analyze_query", "target": "hybrid", "input": "친구 만나기", "expected_keywords_contains": ["친구"], "expected_seeds_contains": ["친구"], "expected_query_contains": "친구"}
+{"id": "qa_hyb_005", "type": "analyze_query", "target": "hybrid", "input": "음악 감상", "expected_keywords_contains": ["음악", "감상"], "expected_seeds_contains": ["음악", "감상"], "expected_query_contains": "음악"}
+{"id": "qa_hyb_006", "type": "analyze_query", "target": "hybrid", "input": "", "expected_keywords_contains": [], "expected_seeds_contains": [], "expected_query_contains": ""}
+{"id": "qa_hyb_007", "type": "analyze_query", "target": "hybrid", "input": "여행 계획 세우기", "expected_keywords_contains": ["여행", "계획"], "expected_seeds_contains": ["여행", "계획"], "expected_query_contains": "여행"}
+{"id": "bd_001", "type": "normalize", "input": "    ", "expected": ""}
+{"id": "bd_002", "type": "tokenize", "input": "", "expected_contains": []}
+{"id": "bd_003", "type": "tokenize", "input": "😀😀😀", "expected_contains": []}
+{"id": "bd_005", "type": "spacing", "input": "", "expected": ""}
+{"id": "bd_006", "type": "analyze_query", "target": "lexical", "input": "   ", "expected_keywords_contains": []}
+{"id": "bd_007", "type": "tokenize", "input": "한자國家포함", "expected_contains": ["한자"]}
+{"id": "bd_008", "type": "analyze_query", "target": "semantic", "input": "어떤 단어든 통과", "expected_query_contains": "단어"}
+{"id": "bd_010", "type": "jamo_roundtrip", "input": "ㅎㅎㅎ 안녕", "expected_choseong": "ㅎㅎㅎ ㅇㄴ"}
