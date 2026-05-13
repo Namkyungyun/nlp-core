@@ -1,8 +1,9 @@
 """Public API for korean-nlp-core.
 
-This module is the single public contract of the SDK. Consumers should
-import every name they need from ``bpmg_korean_nlp`` (not from submodules)
-so that internal layout can evolve without breaking downstream code.
+This module is the single public contract of the SDK (27 public symbols).
+Consumers should import every name they need from ``bpmg_korean_nlp``
+(not from submodules) so that internal layout can evolve without breaking
+downstream code.
 """
 
 from __future__ import annotations

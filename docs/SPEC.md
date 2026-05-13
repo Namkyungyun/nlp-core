@@ -36,7 +36,7 @@
 
 ```
 src/bpmg_korean_nlp/
-├── __init__.py          # 공개 API 29개 심볼 재수출
+├── __init__.py          # 공개 API 27개 심볼 재수출
 ├── enums.py             # QueryTarget, CharType
 ├── exceptions.py        # KoreanNlpError 계층
 ├── models.py            # frozen dataclass 데이터 모델 8종

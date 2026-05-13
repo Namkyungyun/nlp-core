@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """Performance baseline runner for korean-nlp-core.
 
-Reports the p99 latency of three hot paths (tokenize, spacing, hybrid
+Reports the p99 latency of two hot paths (tokenize, hybrid
 ``analyze_query``), the wall time for a 1000-call tokenize loop, and the
 resident memory after the model+dictionary have been loaded.
 
 Targets (post-load, single short sentence):
 
 * ``tokenize`` p99   < 5 ms
-* ``spacing`` p99    < 50 ms
 * ``hybrid``  p99    < 100 ms
 * 1000-call batch tokenize < 2 s wall time
 * resident memory after dict load < 500 MB
@@ -32,7 +31,6 @@ from dataclasses import dataclass
 _DEFAULT_SAMPLE_TEXT = "한국어 자연어 처리 분야에서는 형태소 분석이 중요하다"
 _DEFAULT_ITERATIONS = 1000
 _TOKENIZE_TARGET_MS = 5.0
-_SPACING_TARGET_MS = 50.0
 _HYBRID_TARGET_MS = 100.0
 _BATCH_TARGET_S = 2.0
 _MEMORY_TARGET_MB = 500.0
@@ -90,30 +88,15 @@ def _import_tokenizer() -> object | None:
         return None
 
 
-def _import_spacing() -> object | None:
-    try:
-        from bpmg_korean_nlp.exceptions import SpacingModelLoadError
-        from bpmg_korean_nlp.spacing import SpacingRestorer
-    except ImportError:
-        return None
-    try:
-        return SpacingRestorer.get_instance()
-    except SpacingModelLoadError:
-        return None
-
-
 def _import_analyzer() -> object | None:
     try:
-        from bpmg_korean_nlp.exceptions import (
-            MeCabNotAvailableError,
-            SpacingModelLoadError,
-        )
+        from bpmg_korean_nlp.exceptions import MeCabNotAvailableError
         from bpmg_korean_nlp.query_analyzer import QueryAnalyzer
     except ImportError:
         return None
     try:
         return QueryAnalyzer()
-    except (MeCabNotAvailableError, SpacingModelLoadError):
+    except MeCabNotAvailableError:
         return None
 
 
@@ -153,21 +136,10 @@ def main(iterations: int = _DEFAULT_ITERATIONS, text: str = _DEFAULT_SAMPLE_TEXT
         if batch_seconds >= _BATCH_TARGET_S:
             failures.append("batch tokenize")
 
-    spacing = _import_spacing()
-    if spacing is None:
-        missing.append("spacing")
-        print("[SKIP] spacing     — PyKoSpacing unavailable")
-    else:
-        spacing.restore(text)  # type: ignore[attr-defined]
-        stats = _measure(lambda: spacing.restore(text), iterations)  # type: ignore[attr-defined]
-        print(_format_row("spacing", stats, _SPACING_TARGET_MS))
-        if stats.p99 >= _SPACING_TARGET_MS:
-            failures.append("spacing p99")
-
     analyzer = _import_analyzer()
     if analyzer is None:
         missing.append("hybrid")
-        print("[SKIP] hybrid      — MeCab + PyKoSpacing unavailable")
+        print("[SKIP] hybrid      — MeCab unavailable")
     else:
         analyzer.analyze(text, "hybrid")  # type: ignore[attr-defined]
         stats = _measure(
