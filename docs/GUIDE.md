@@ -16,17 +16,16 @@ from bpmg_korean_nlp import KoreanNormalizer, MeCabTokenizer, ...
 
 1. [설치](#1-설치)
 2. [KoreanNormalizer — 텍스트 정규화](#2-koreannormalizer--텍스트-정규화)
-3. [SpacingRestorer — 띄어쓰기 복원](#3-spacingrestorer--띄어쓰기-복원)
-4. [MeCabTokenizer — 형태소 분석](#4-mecabtokenizer--형태소-분석)
-5. [QueryAnalyzer — 쿼리 변환](#5-queryanalyzer--쿼리-변환)
-6. [Jamo 유틸리티](#6-jamo-유틸리티)
-7. [불용어](#7-불용어)
-8. [PII 패턴](#8-pii-패턴)
-9. [MeCab 상태 확인](#9-mecab-상태-확인)
-10. [데이터 모델](#10-데이터-모델)
-11. [열거형](#11-열거형)
-12. [예외 처리](#12-예외-처리)
-13. [테스트 환경 패턴](#13-테스트-환경-패턴)
+3. [MeCabTokenizer — 형태소 분석](#3-mecabtokenizer--형태소-분석)
+4. [QueryAnalyzer — 쿼리 변환](#4-queryanalyzer--쿼리-변환)
+5. [Jamo 유틸리티](#5-jamo-유틸리티)
+6. [불용어](#6-불용어)
+7. [PII 패턴](#7-pii-패턴)
+8. [MeCab 상태 확인](#8-mecab-상태-확인)
+9. [데이터 모델](#9-데이터-모델)
+10. [열거형](#10-열거형)
+11. [예외 처리](#11-예외-처리)
+12. [테스트 환경 패턴](#12-테스트-환경-패턴)
 
 ---
 
@@ -58,10 +57,6 @@ brew install mecab mecab-ko mecab-ko-dic
 ```bash
 sudo apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
 ```
-
-`SpacingRestorer`는 PyKoSpacing을 별도 설치해야 합니다. 미설치 환경에서
-`SpacingRestorer.get_instance()`를 호출하면 `SpacingModelLoadError`가 발생합니다.
-나머지 기능은 PyKoSpacing 없이도 정상 동작합니다.
 
 ---
 
@@ -158,60 +153,7 @@ except InvalidInputError as e:
 
 ---
 
-## 3. git  — 띄어쓰기 복원
-
-```python
-from bpmg_korean_nlp import SpacingRestorer
-```
-
-PyKoSpacing 딥러닝 모델 기반의 띄어쓰기 복원기입니다.
-모델 로딩 비용이 크므로 프로세스 내 싱글톤으로 관리됩니다.
-
-> **주의**: PyKoSpacing을 별도 설치해야 합니다. 미설치 시 `SpacingModelLoadError`가 발생합니다.
-
-### 싱글톤 획득
-
-```python
-# 권장 방식
-restorer = SpacingRestorer.get_instance()
-
-# 직접 생성 (동일 객체 반환)
-restorer = SpacingRestorer()
-```
-
-### 메서드
-
-#### `restore(text: str) → str`
-
-내부적으로 `kss`로 문장 분리 후 각 문장에 PyKoSpacing 적용, 결과를 공백으로 합칩니다.
-
-
-| 입력            | 출력                  |
-| ------------- | ------------------- |
-| 빈 문자열         | 빈 문자열               |
-| `None` / 비문자열 | `InvalidInputError` |
-
-
-### 예시
-
-```python
-restorer = SpacingRestorer.get_instance()
-
-print(restorer.restore("아버지가방에들어가신다"))
-# 아버지가 방에 들어가신다
-
-print(restorer.restore("세종대학교도서관이어디있나요"))
-# 세종대학교 도서관이 어디 있나요
-
-# 두 번 호출해도 모델은 한 번만 로딩
-restorer2 = SpacingRestorer.get_instance()
-print(restorer is restorer2)
-# True
-```
-
----
-
-## 4. MeCabTokenizer — 형태소 분석
+## 3. MeCabTokenizer — 형태소 분석
 
 ```python
 from bpmg_korean_nlp import MeCabTokenizer
@@ -353,7 +295,7 @@ MeCabTokenizer.reset_instances()
 
 ---
 
-## 5. QueryAnalyzer — 쿼리 변환
+## 4. QueryAnalyzer — 쿼리 변환
 
 ```python
 from bpmg_korean_nlp import QueryAnalyzer, QueryTarget, analyze_query
@@ -379,7 +321,6 @@ from bpmg_korean_nlp import QueryAnalyzer, QueryTarget, analyze_query
 QueryAnalyzer(
     normalizer: KoreanNormalizer | None = None,
     tokenizer: MeCabTokenizer | None = None,
-    spacing_restorer: SpacingRestorer | None = None,
     stopwords: frozenset[str] | None = None,
 )
 ```
@@ -452,21 +393,11 @@ from bpmg_korean_nlp import merge_stopwords
 
 domain_stopwords = merge_stopwords(frozenset({"수업", "교재", "학점"}))
 analyzer = QueryAnalyzer(stopwords=domain_stopwords)
-
-# PyKoSpacing 없는 환경 — 스텁 주입
-class _NoopSpacing:
-    def restore(self, text: str) -> str:
-        return text
-
-analyzer = QueryAnalyzer(spacing_restorer=_NoopSpacing())
-result = analyzer.analyze("테스트 쿼리", QueryTarget.LEXICAL)
-print(result)
-# LexicalQueryResult(keywords=('테스트', '쿼리'), query='테스트 쿼리')
 ```
 
 ---
 
-## 6. Jamo 유틸리티
+## 5. Jamo 유틸리티
 
 ```python
 from bpmg_korean_nlp import decompose, compose, extract_choseong, classify_char, CharType
@@ -570,7 +501,7 @@ print(classify_char(" "))    # whitespace
 
 ---
 
-## 7. 불용어
+## 6. 불용어
 
 ```python
 from bpmg_korean_nlp import DEFAULT_STOPWORDS, merge_stopwords
@@ -614,7 +545,7 @@ print(len(combined))                  # 159  (155 + 4)
 
 ---
 
-## 8. PII 패턴
+## 7. PII 패턴
 
 ```python
 from bpmg_korean_nlp import PII_PATTERNS, PIIPattern, PIIDetectedError
@@ -686,7 +617,7 @@ for p in PII_PATTERNS:
 
 ---
 
-## 9. MeCab 상태 확인
+## 8. MeCab 상태 확인
 
 ```python
 from bpmg_korean_nlp import check_mecab_dict, DictCheckResult
@@ -729,7 +660,7 @@ print(f"MeCab OK — dict: {result.dict_path}")
 
 ---
 
-## 10. 데이터 모델
+## 9. 데이터 모델
 
 모든 모델은 `@dataclass(frozen=True, slots=True)`로 선언되어 있어 불변·해시 가능합니다.
 
@@ -818,7 +749,7 @@ type QueryResult = LexicalQueryResult | SemanticQueryResult | GraphQueryResult |
 
 ---
 
-## 11. 열거형
+## 10. 열거형
 
 ```python
 from bpmg_korean_nlp import QueryTarget, CharType
@@ -859,7 +790,7 @@ print(str(QueryTarget.SEMANTIC))          # semantic
 
 ---
 
-## 12. 예외 처리
+## 11. 예외 처리
 
 ```python
 from bpmg_korean_nlp import (
@@ -867,7 +798,6 @@ from bpmg_korean_nlp import (
     InvalidInputError,
     MeCabNotAvailableError,
     PIIDetectedError,
-    SpacingModelLoadError,
 )
 ```
 
@@ -877,7 +807,6 @@ from bpmg_korean_nlp import (
 KoreanNlpError (기반 클래스)
 ├── InvalidInputError        — None 또는 str이 아닌 입력
 ├── MeCabNotAvailableError   — MeCab 초기화·분석 실패
-├── SpacingModelLoadError    — PyKoSpacing 모델 로드 실패
 └── PIIDetectedError         — PII 패턴 감지 (2차 필터)
 ```
 
@@ -888,7 +817,6 @@ KoreanNlpError (기반 클래스)
 | ------------------------ | ----------------------------------------------------------------- |
 | `InvalidInputError`      | `None` 또는 비문자열 입력 시. **빈 문자열은 정상** — 빈 결과 반환                      |
 | `MeCabNotAvailableError` | `python-mecab-ko` 미설치, 사전 경로 오류, 분석 실패                            |
-| `SpacingModelLoadError`  | `pykospacing` 미설치 또는 모델 초기화 실패                                    |
 | `PIIDetectedError`       | `QueryAnalyzer.analyze()` 입력에 PII 패턴 감지. `e.matched`에 패턴 이름 목록 포함 |
 
 
@@ -930,16 +858,6 @@ except MeCabNotAvailableError as e:
 ```
 
 ```python
-from bpmg_korean_nlp import SpacingRestorer, SpacingModelLoadError
-
-try:
-    restorer = SpacingRestorer.get_instance()
-except SpacingModelLoadError as e:
-    print(f"PyKoSpacing 로드 실패: {e}")
-    # PyKoSpacing 없이 계속 진행하는 폴백 처리
-```
-
-```python
 from bpmg_korean_nlp import QueryAnalyzer, QueryTarget, PIIDetectedError
 
 analyzer = QueryAnalyzer()
@@ -955,29 +873,7 @@ except PIIDetectedError as e:
 
 ---
 
-## 13. 테스트 환경 패턴
-
-### PyKoSpacing 없는 환경에서 QueryAnalyzer 사용
-
-PyKoSpacing이 설치되지 않은 CI 환경이나 경량 개발 환경에서 `QueryAnalyzer`를 테스트할 때
-스텁을 주입합니다.
-
-```python
-from bpmg_korean_nlp import QueryAnalyzer, QueryTarget
-
-class _NoopSpacing:
-    """PyKoSpacing 스텁 — 입력을 그대로 반환."""
-    def restore(self, text: str) -> str:
-        return text
-
-analyzer = QueryAnalyzer(spacing_restorer=_NoopSpacing())
-result = analyzer.analyze("세종대학교 도서관", QueryTarget.LEXICAL)
-print(result)
-# LexicalQueryResult(keywords=('세종', '대학교', '도서관'), query='세종 대학교 도서관')
-
-print(result.keywords)
-# ('세종', '대학교', '도서관')
-```
+## 12. 테스트 환경 패턴
 
 ### MeCabTokenizer 싱글톤 캐시 초기화 (테스트 격리)
 
@@ -1018,7 +914,6 @@ def test_tokenize():
 | 심볼                       | 종류                       | 모듈               |
 | ------------------------ | ------------------------ | ---------------- |
 | `KoreanNormalizer`       | 클래스                      | `normalizer`     |
-| `SpacingRestorer`        | 클래스                      | `spacing`        |
 | `MeCabTokenizer`         | 클래스                      | `tokenizer`      |
 | `QueryAnalyzer`          | 클래스                      | `query_analyzer` |
 | `QueryTarget`            | StrEnum                  | `enums`          |
@@ -1045,6 +940,5 @@ def test_tokenize():
 | `InvalidInputError`      | 예외                       | `exceptions`     |
 | `MeCabNotAvailableError` | 예외                       | `exceptions`     |
 | `PIIDetectedError`       | 예외                       | `exceptions`     |
-| `SpacingModelLoadError`  | 예외                       | `exceptions`     |
 
 

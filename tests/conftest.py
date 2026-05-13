@@ -1,10 +1,10 @@
 """Shared pytest fixtures for the korean-nlp-core test suite.
 
-Most logic tests use DI fakes (see ``FakeTokenizer``/``FakeSpacing`` /
+Most logic tests use DI fakes (see ``FakeTokenizer`` /
 ``FakeNormalizer``) so they run anywhere — including CI environments that
-lack MeCab or PyKoSpacing. Tests that genuinely require those heavy
-dependencies are guarded by the ``real_mecab`` / ``real_spacing`` fixtures,
-which skip cleanly when the binding or model is not importable.
+lack MeCab. Tests that genuinely require those heavy
+dependencies are guarded by the ``real_mecab`` fixture,
+which skips cleanly when the binding is not importable.
 """
 
 from __future__ import annotations
@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from bpmg_korean_nlp.models import MorphToken
     from bpmg_korean_nlp.normalizer import KoreanNormalizer
     from bpmg_korean_nlp.query_analyzer import QueryAnalyzer
-    from bpmg_korean_nlp.spacing import SpacingRestorer
     from bpmg_korean_nlp.tokenizer import MeCabTokenizer
 
 
@@ -31,17 +30,7 @@ def _has_mecab() -> bool:
     return True
 
 
-def _has_pykospacing() -> bool:
-    """Return ``True`` iff the ``pykospacing`` package imports."""
-    try:
-        import pykospacing  # noqa: F401
-    except ImportError:
-        return False
-    return True
-
-
 HAS_MECAB: bool = _has_mecab()
-HAS_PYKOSPACING: bool = _has_pykospacing()
 
 
 # ---------------------------------------------------------------------------
@@ -58,7 +47,7 @@ def normalizer() -> KoreanNormalizer:
 
 
 # ---------------------------------------------------------------------------
-# Heavy-dep fixtures (skip when MeCab / PyKoSpacing missing)
+# Heavy-dep fixtures (skip when MeCab missing)
 # ---------------------------------------------------------------------------
 
 
@@ -77,30 +66,14 @@ def real_tokenizer() -> MeCabTokenizer:
 
 
 @pytest.fixture(scope="session")
-def real_spacing() -> SpacingRestorer:
-    """Session-scoped real PyKoSpacing model; skip when unavailable."""
-    if not HAS_PYKOSPACING:
-        pytest.skip("PyKoSpacing not installed")
-    from bpmg_korean_nlp.exceptions import SpacingModelLoadError
-    from bpmg_korean_nlp.spacing import SpacingRestorer
-
-    try:
-        return SpacingRestorer.get_instance()
-    except SpacingModelLoadError as exc:
-        pytest.skip(f"PyKoSpacing model not loadable: {exc}")
-
-
-@pytest.fixture(scope="session")
 def real_query_analyzer(
     real_tokenizer: MeCabTokenizer,
-    real_spacing: SpacingRestorer,
 ) -> QueryAnalyzer:
-    """Real QueryAnalyzer using the actual MeCab + PyKoSpacing singletons."""
+    """Real QueryAnalyzer using the actual MeCab singleton."""
     from bpmg_korean_nlp.query_analyzer import QueryAnalyzer
 
     return QueryAnalyzer(
         tokenizer=real_tokenizer,
-        spacing_restorer=real_spacing,
     )
 
 
@@ -122,17 +95,6 @@ class FakeNormalizer:
         if self._transform is None:
             return text.strip()
         return self._transform(text)
-
-
-class FakeSpacing:
-    """Identity spacing restorer; records the calls it saw."""
-
-    def __init__(self) -> None:
-        self.calls: list[str] = []
-
-    def restore(self, text: str) -> str:
-        self.calls.append(text)
-        return text
 
 
 class FakeTokenizer:
@@ -202,12 +164,6 @@ def fake_normalizer() -> FakeNormalizer:
 
 
 @pytest.fixture
-def fake_spacing() -> FakeSpacing:
-    """Fresh identity spacing restorer per test."""
-    return FakeSpacing()
-
-
-@pytest.fixture
 def fake_tokenizer() -> FakeTokenizer:
     """Fresh empty fake tokenizer per test — configure via ``.configure(...)``."""
     return FakeTokenizer()
@@ -217,7 +173,6 @@ def fake_tokenizer() -> FakeTokenizer:
 def di_query_analyzer(
     fake_normalizer: FakeNormalizer,
     fake_tokenizer: FakeTokenizer,
-    fake_spacing: FakeSpacing,
 ) -> QueryAnalyzer:
     """QueryAnalyzer wired entirely from fakes (MeCab not required)."""
     from bpmg_korean_nlp.query_analyzer import QueryAnalyzer
@@ -225,7 +180,6 @@ def di_query_analyzer(
     return QueryAnalyzer(
         normalizer=fake_normalizer,  # type: ignore[arg-type]
         tokenizer=fake_tokenizer,  # type: ignore[arg-type]
-        spacing_restorer=fake_spacing,  # type: ignore[arg-type]
     )
 
 

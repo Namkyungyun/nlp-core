@@ -1,7 +1,7 @@
 """Tests for the QueryAnalyzer 4-target pipeline.
 
 All target dispatch logic is verified against DI fakes so the suite runs
-without MeCab or PyKoSpacing. Real-model integration is covered by the
+without MeCab. Real-model integration is covered by the
 golden-set tests under :mod:`test_golden`.
 """
 
@@ -21,21 +21,19 @@ from bpmg_korean_nlp.models import (
     SemanticQueryResult,
 )
 from bpmg_korean_nlp.query_analyzer import QueryAnalyzer, analyze_query
-from tests.conftest import FakeNormalizer, FakeSpacing, FakeTokenizer
+from tests.conftest import FakeNormalizer, FakeTokenizer
 
 
 def _build_analyzer(
     tokens: list[tuple[str, str]],
-) -> tuple[QueryAnalyzer, FakeTokenizer, FakeSpacing]:
+) -> tuple[QueryAnalyzer, FakeTokenizer]:
     norm = FakeNormalizer()
     tok = FakeTokenizer(tokens)
-    spc = FakeSpacing()
     qa = QueryAnalyzer(
         normalizer=norm,  # type: ignore[arg-type]
         tokenizer=tok,  # type: ignore[arg-type]
-        spacing_restorer=spc,  # type: ignore[arg-type]
     )
-    return qa, tok, spc
+    return qa, tok
 
 
 # ---------------------------------------------------------------------------
@@ -45,7 +43,7 @@ def _build_analyzer(
 
 def test_lexical_returns_lexical_result() -> None:
     """Lexical target returns ``LexicalQueryResult`` with tuple keywords."""
-    qa, _, _ = _build_analyzer([("조사", "NNG"), ("어미", "NNG"), ("차이", "NNG"), ("가", "JKS")])
+    qa, _ = _build_analyzer([("조사", "NNG"), ("어미", "NNG"), ("차이", "NNG"), ("가", "JKS")])
     result = qa.analyze("조사랑 어미 차이", QueryTarget.LEXICAL)
     assert isinstance(result, LexicalQueryResult)
     assert isinstance(result.keywords, tuple)
@@ -57,7 +55,7 @@ def test_lexical_returns_lexical_result() -> None:
 
 def test_semantic_returns_semantic_result() -> None:
     """Semantic target preserves the preprocessed natural sentence."""
-    qa, _, _ = _build_analyzer([])
+    qa, _ = _build_analyzer([])
     text = "조사와 어미의 차이는 무엇인가요?"
     result = qa.analyze(text, QueryTarget.SEMANTIC)
     assert isinstance(result, SemanticQueryResult)
@@ -69,7 +67,7 @@ def test_semantic_returns_semantic_result() -> None:
 
 def test_graph_returns_graph_result_nng_nnp_only() -> None:
     """Graph target collects only ``NNG``/``NNP`` lemmas."""
-    qa, _, _ = _build_analyzer(
+    qa, _ = _build_analyzer(
         [
             ("서울", "NNP"),
             ("에서", "JKB"),
@@ -88,7 +86,7 @@ def test_graph_returns_graph_result_nng_nnp_only() -> None:
 
 def test_hybrid_returns_hybrid_result_with_all_three() -> None:
     """Hybrid target bundles lexical + semantic + graph in one record."""
-    qa, _, _ = _build_analyzer(
+    qa, _ = _build_analyzer(
         [
             ("서울", "NNP"),
             ("에서", "JKB"),
@@ -113,7 +111,7 @@ def test_hybrid_returns_hybrid_result_with_all_three() -> None:
 )
 def test_empty_input_per_target(target: QueryTarget) -> None:
     """Empty-string input produces empty-result objects for every target."""
-    qa, _, _ = _build_analyzer([])
+    qa, _ = _build_analyzer([])
     result = qa.analyze("", target)
     if isinstance(result, LexicalQueryResult):
         assert result.keywords == ()
@@ -135,7 +133,7 @@ def test_empty_input_per_target(target: QueryTarget) -> None:
 )
 def test_whitespace_only_per_target(target: QueryTarget) -> None:
     """Whitespace-only normalizes to empty and yields empty results."""
-    qa, _, _ = _build_analyzer([])
+    qa, _ = _build_analyzer([])
     result = qa.analyze("   \t  ", target)
     assert result is not None
 
@@ -151,7 +149,7 @@ def test_whitespace_only_per_target(target: QueryTarget) -> None:
 )
 def test_english_input_per_target(target: QueryTarget) -> None:
     """Pure-English input flows through every target without raising."""
-    qa, _, _ = _build_analyzer([("hello", "SL"), ("world", "SL")])
+    qa, _ = _build_analyzer([("hello", "SL"), ("world", "SL")])
     result = qa.analyze("hello world", target)
     assert result is not None
 
@@ -162,7 +160,7 @@ def test_english_input_per_target(target: QueryTarget) -> None:
 )
 def test_hanja_input_per_target(target: QueryTarget) -> None:
     """Pure-Hanja input flows through every target without raising."""
-    qa, _, _ = _build_analyzer([("國家", "SH")])
+    qa, _ = _build_analyzer([("國家", "SH")])
     result = qa.analyze("國家", target)
     assert result is not None
 
@@ -178,21 +176,21 @@ def test_hanja_input_per_target(target: QueryTarget) -> None:
 )
 def test_string_target_case_insensitive(spelling: str) -> None:
     """String target values are accepted regardless of case."""
-    qa, _, _ = _build_analyzer([("test", "NNG")])
+    qa, _ = _build_analyzer([("test", "NNG")])
     result = qa.analyze("test", spelling)
     assert isinstance(result, LexicalQueryResult)
 
 
 def test_unknown_target_string_raises() -> None:
     """An unrecognized target string raises :class:`InvalidInputError`."""
-    qa, _, _ = _build_analyzer([])
+    qa, _ = _build_analyzer([])
     with pytest.raises(InvalidInputError):
         qa.analyze("test", "unknown_target")
 
 
 def test_non_string_non_enum_target_raises() -> None:
     """A target that's neither a string nor a :class:`QueryTarget` raises."""
-    qa, _, _ = _build_analyzer([])
+    qa, _ = _build_analyzer([])
     with pytest.raises(InvalidInputError):
         qa.analyze("test", 123)  # type: ignore[arg-type]
 
@@ -203,13 +201,13 @@ def test_non_string_non_enum_target_raises() -> None:
 
 
 def test_rejects_none_text() -> None:
-    qa, _, _ = _build_analyzer([])
+    qa, _ = _build_analyzer([])
     with pytest.raises(InvalidInputError):
         qa.analyze(None, QueryTarget.LEXICAL)  # type: ignore[arg-type]
 
 
 def test_rejects_non_str_text() -> None:
-    qa, _, _ = _build_analyzer([])
+    qa, _ = _build_analyzer([])
     with pytest.raises(InvalidInputError):
         qa.analyze(42, QueryTarget.LEXICAL)  # type: ignore[arg-type]
 
@@ -219,23 +217,9 @@ def test_rejects_non_str_text() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_spacing_is_invoked_on_non_empty_input() -> None:
-    """The spacing restorer is called once per non-empty analyze call."""
-    qa, _, spc = _build_analyzer([("a", "NNG")])
-    qa.analyze("hello", QueryTarget.LEXICAL)
-    assert len(spc.calls) == 1
-
-
-def test_spacing_skipped_on_empty_normalized_text() -> None:
-    """Whitespace-only inputs short-circuit before the spacing model."""
-    qa, _, spc = _build_analyzer([])
-    qa.analyze("   ", QueryTarget.LEXICAL)
-    assert spc.calls == []
-
-
 def test_hybrid_runs_each_branch_once() -> None:
     """Hybrid pipeline produces results consistent with running each branch alone."""
-    qa, _, _ = _build_analyzer([("서울", "NNP"), ("일", "NNG"), ("의", "JKG")])
+    qa, _ = _build_analyzer([("서울", "NNP"), ("일", "NNG"), ("의", "JKG")])
     h = qa.analyze("서울 일의", QueryTarget.HYBRID)
     assert isinstance(h, HybridQueryResult)
     # graph branch keeps only NNG/NNP
@@ -246,7 +230,7 @@ def test_hybrid_runs_each_branch_once() -> None:
 
 def test_long_input_warning_does_not_raise(caplog: pytest.LogCaptureFixture) -> None:
     """Inputs over 10k characters emit a WARNING but still complete."""
-    qa, _, _ = _build_analyzer([])
+    qa, _ = _build_analyzer([])
     long_text = "가" * 10_001
     with caplog.at_level("WARNING", logger="bpmg_korean_nlp.query_analyzer"):
         qa.analyze(long_text, QueryTarget.SEMANTIC)
@@ -265,7 +249,6 @@ def test_analyze_query_default_target_is_lexical() -> None:
     qa_module._default_analyzer = QueryAnalyzer(
         normalizer=FakeNormalizer(),  # type: ignore[arg-type]
         tokenizer=FakeTokenizer([("test", "NNG")]),  # type: ignore[arg-type]
-        spacing_restorer=FakeSpacing(),  # type: ignore[arg-type]
     )
     result = analyze_query("test")
     assert isinstance(result, LexicalQueryResult)
@@ -278,7 +261,6 @@ def test_analyze_query_accepts_string_target() -> None:
     qa_module._default_analyzer = QueryAnalyzer(
         normalizer=FakeNormalizer(),  # type: ignore[arg-type]
         tokenizer=FakeTokenizer([("test", "NNG")]),  # type: ignore[arg-type]
-        spacing_restorer=FakeSpacing(),  # type: ignore[arg-type]
     )
     result = analyze_query("test", "semantic")
     assert isinstance(result, SemanticQueryResult)

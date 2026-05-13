@@ -18,7 +18,7 @@
 
 | #    | 영역               | 테스트 항목              |
 | ---- | ---------------- | ------------------- |
-| T-01 | 환경               | 공개 API 31개 심볼 로드    |
+| T-01 | 환경               | 공개 API 27개 심볼 로드    |
 | T-02 | KoreanNormalizer | NFC 정규화             |
 | T-03 | KoreanNormalizer | 반복 문자 축약            |
 | T-04 | KoreanNormalizer | 공백 정규화 (유니코드 공백 포함) |
@@ -46,7 +46,7 @@
 
 ---
 
-## T-01 — 공개 API 29개 심볼 로드
+## T-01 — 공개 API 27개 심볼 로드
 
 ```bash
 python - << 'EOF'
@@ -59,12 +59,12 @@ EOF
 **기대 결과**
 
 ```
-심볼 수: 29
+심볼 수: 27
 ['DEFAULT_STOPWORDS', 'PII_PATTERNS', 'CharType', 'DictCheckResult', 'GraphQueryResult',
  'HybridQueryResult', 'InvalidInputError', 'JamoComponents', 'KoreanNlpError', 'KoreanNormalizer',
  'LexicalQueryResult', 'MeCabNotAvailableError', 'MeCabTokenizer', 'MorphToken',
  'PIIPattern', 'QueryAnalyzer', 'QueryResult', 'QueryTarget', 'SemanticQueryResult',
- 'SpacingModelLoadError', 'SpacingRestorer', 'analyze_query', 'check_mecab_dict', 'classify_char',
+ 'analyze_query', 'check_mecab_dict', 'classify_char',
  'compose', 'decompose', 'extract_choseong',
  'merge_stopwords']
 ```
@@ -395,18 +395,11 @@ analyze(int) -> InvalidInputError: text must be a str, got int
 
 ## T-12 — QueryAnalyzer: LEXICAL 타깃
 
-> QueryAnalyzer는 내부적으로 SpacingRestorer를 사용합니다.  
-> PyKoSpacing 미설치 환경에서는 아래와 같이 noop 스텁을 주입합니다.
-
 ```bash
 python - << 'EOF'
 from bpmg_korean_nlp import QueryAnalyzer, QueryTarget
 
-class _NoopSpacing:
-    def restore(self, text):
-        return text
-
-qa = QueryAnalyzer(spacing_restorer=_NoopSpacing())
+qa = QueryAnalyzer()
 
 cases = [
     '세종대학교 도서관 위치',
@@ -446,11 +439,7 @@ EOF
 python - << 'EOF'
 from bpmg_korean_nlp import QueryAnalyzer, QueryTarget
 
-class _NoopSpacing:
-    def restore(self, text):
-        return text
-
-qa = QueryAnalyzer(spacing_restorer=_NoopSpacing())
+qa = QueryAnalyzer()
 
 cases = ['세종대학교 도서관 위치', '한국어 NLP란 무엇인가']
 for text in cases:
@@ -476,11 +465,7 @@ EOF
 python - << 'EOF'
 from bpmg_korean_nlp import QueryAnalyzer, QueryTarget
 
-class _NoopSpacing:
-    def restore(self, text):
-        return text
-
-qa = QueryAnalyzer(spacing_restorer=_NoopSpacing())
+qa = QueryAnalyzer()
 
 cases = [
     '세종대학교 도서관 위치',
@@ -512,11 +497,7 @@ EOF
 python - << 'EOF'
 from bpmg_korean_nlp import QueryAnalyzer, QueryTarget
 
-class _NoopSpacing:
-    def restore(self, text):
-        return text
-
-qa = QueryAnalyzer(spacing_restorer=_NoopSpacing())
+qa = QueryAnalyzer()
 result = qa.analyze('세종대학교 도서관 위치', QueryTarget.HYBRID)
 
 print('type:', type(result).__name__)
@@ -559,11 +540,7 @@ type: HybridQueryResult
 python - << 'EOF'
 from bpmg_korean_nlp import QueryAnalyzer, QueryTarget
 
-class _NoopSpacing:
-    def restore(self, text):
-        return text
-
-qa = QueryAnalyzer(spacing_restorer=_NoopSpacing())
+qa = QueryAnalyzer()
 
 for text in ['', '   ', '\t\n']:
     for target in [QueryTarget.LEXICAL, QueryTarget.SEMANTIC, QueryTarget.GRAPH]:
@@ -594,11 +571,7 @@ EOF
 python - << 'EOF'
 from bpmg_korean_nlp import QueryAnalyzer
 
-class _NoopSpacing:
-    def restore(self, text):
-        return text
-
-qa = QueryAnalyzer(spacing_restorer=_NoopSpacing())
+qa = QueryAnalyzer()
 text = '세종대학교에서일하는중입니다.'
 
 for target_str in ['lexical', 'LEXICAL', 'Lexical', 'lEXICaL']:
@@ -622,13 +595,9 @@ target='lEXICaL'    -> LexicalQueryResult
 
 ```bash
 python - << 'EOF'
-from bpmg_korean_nlp import QueryAnalyzer, QueryTarget, InvalidInputError, SpacingModelLoadError
+from bpmg_korean_nlp import QueryAnalyzer, QueryTarget, InvalidInputError
 
-class _NoopSpacing:
-    def restore(self, text):
-        return text
-
-qa = QueryAnalyzer(spacing_restorer=_NoopSpacing())
+qa = QueryAnalyzer()
 
 try:
     qa.analyze(None, QueryTarget.LEXICAL)
@@ -639,20 +608,14 @@ try:
     qa.analyze('테스트', 'invalid_target')
 except InvalidInputError as e:
     print(f'잘못된 타깃 -> InvalidInputError: {e}')
-
-try:
-    qa_default = QueryAnalyzer()
-except SpacingModelLoadError as e:
-    print(f'spacing_restorer 미주입 -> SpacingModelLoadError: {type(e).__name__}')
 EOF
 ```
 
-**기대 결과** (PyKoSpacing 미설치 환경)
+**기대 결과**
 
 ```
 None 입력 -> InvalidInputError: text must be a str, got NoneType
 잘못된 타깃 -> InvalidInputError: ...
-spacing_restorer 미주입 -> SpacingModelLoadError: SpacingModelLoadError
 ```
 
 ---
@@ -834,11 +797,7 @@ merge 후 크기: 157
 python - << 'EOF'
 from bpmg_korean_nlp import QueryAnalyzer, QueryTarget, PII_PATTERNS, PIIDetectedError
 
-class _NoopSpacing:
-    def restore(self, text):
-        return text
-
-analyzer = QueryAnalyzer(spacing_restorer=_NoopSpacing())
+analyzer = QueryAnalyzer()
 
 print('PII 패턴 목록:')
 for p in PII_PATTERNS:
@@ -938,11 +897,3 @@ pytest tests/test_tokenizer.py -v
 pytest tests/test_query_analyzer.py -v
 pytest tests/test_jamo_utils.py -v
 ```
-
-**예상 결과** (PyKoSpacing 미설치 환경)
-
-```
-271 passed, 51 skipped in ~1s
-```
-
-스킵된 51개는 `PyKoSpacing not installed` 사유이며 정상입니다.

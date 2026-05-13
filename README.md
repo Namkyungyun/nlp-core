@@ -1,10 +1,10 @@
 # bpmg-korean-nlp
 
-한국어 NLP 전처리 Python SDK — 정규화·띄어쓰기 복원·형태소 분석·쿼리 변환.
+한국어 NLP 전처리 Python SDK — 정규화·형태소 분석·쿼리 변환.
 
 `retrieval-engine`을 비롯한 다운스트림 시스템의 한국어 처리 어댑터로 사용되는
 공통 모듈입니다. 본 SDK는 BM25/벡터 검색/그래프 순회/랭킹을 수행하지 않으며,
-오직 **normalize / spacing / tokenize / analyze / query transform**만 담당합니다.
+오직 **normalize / tokenize / analyze / query transform**만 담당합니다.
 
 ---
 
@@ -20,18 +20,6 @@ pip install bpmg-korean-nlp
 ```bash
 pip install "bpmg-korean-nlp[hanja]"
 ```
-
-### 띄어쓰기 복원 — `SpacingRestorer`
-
-`SpacingRestorer`는 PyKoSpacing 딥러닝 모델에 의존합니다. 별도 설치가 필요합니다:
-
-```bash
-pip install pykospacing
-```
-
-미설치 환경에서 `SpacingRestorer.get_instance()`를 호출하면 `SpacingModelLoadError`가
-발생합니다. 나머지 기능 (`KoreanNormalizer`, `MeCabTokenizer`, `QueryAnalyzer`의
-`LEXICAL`/`GRAPH` 타깃)은 PyKoSpacing 없이도 정상 동작합니다.
 
 개발용 설치:
 
@@ -78,7 +66,6 @@ RUN pip install bpmg-korean-nlp
 from bpmg_korean_nlp import (
     KoreanNormalizer,
     MeCabTokenizer,
-    SpacingRestorer,
     QueryAnalyzer,
     QueryTarget,
 )
@@ -87,16 +74,12 @@ from bpmg_korean_nlp import (
 normalizer = KoreanNormalizer()
 text = normalizer.normalize("안녕하세요ㅋㅋㅋㅋㅋㅋ   세종!!!")
 
-# 2) 띄어쓰기 복원 (싱글톤)
-spacing = SpacingRestorer()
-restored = spacing.restore("아버지가방에들어가신다")
-
-# 3) 형태소 분석 (싱글톤)
+# 2) 형태소 분석 (싱글톤)
 tokenizer = MeCabTokenizer()
 tokens = tokenizer.tokenize("세종대학교에서 한국어 NLP를 연구한다")
 morphs = tokenizer.analyze("세종대학교에서 한국어 NLP를 연구한다")
 
-# 4) 쿼리 변환 — 4-target 파이프라인
+# 3) 쿼리 변환 — 4-target 파이프라인
 analyzer = QueryAnalyzer()
 lex = analyzer.analyze("세종대학교 도서관 위치", QueryTarget.LEXICAL)
 sem = analyzer.analyze("세종대학교 도서관 위치", QueryTarget.SEMANTIC)
@@ -115,7 +98,6 @@ API 상세 설명은 [`GUIDE.md`](GUIDE.md)를, 기능 명세는 [`SPEC.md`](SPE
 | 패키지 | 사용 이유 | 사용처 |
 |---|---|---|
 | `python-mecab-ko` | MeCab 한국어 형태소 분석기의 Python 바인딩. `mecab-ko-dic` 사전을 통해 세종 품사 태그 기반 형태소 분석을 제공 | `MeCabTokenizer`, `check_mecab_dict` |
-| `kss` | 문장 분리 라이브러리. PyKoSpacing 모델이 단문장 단위 입력만 지원하므로 긴 텍스트를 문장으로 나눠 모델에 전달 | `SpacingRestorer` |
 | `soynlp` | `repeat_normalize` 함수로 "ㅋㅋㅋㅋㅋ" → "ㅋㅋ" 형태의 반복 문자를 축약. 전처리 파이프라인의 고정 단계로 사용 | `KoreanNormalizer` |
 | `regex` | 표준 `re` 모듈과 달리 유니코드 속성 기반 `\s` 매칭을 지원. 전각 공백·특수 공백 문자 등 다양한 유니코드 공백을 단일 패턴으로 처리 | `KoreanNormalizer` |
 
@@ -123,7 +105,6 @@ API 상세 설명은 [`GUIDE.md`](GUIDE.md)를, 기능 명세는 [`SPEC.md`](SPE
 
 | 패키지 | 사용 이유 | 사용처 | 설치 방법 |
 |---|---|---|---|
-| `pykospacing` | 딥러닝 기반 띄어쓰기 복원 모델. 미설치 시 `SpacingRestorer` 사용 불가 | `SpacingRestorer` | `pip install pykospacing` |
 | `hanja` | 한자 문자열을 한글 음가로 변환 (`大學校` → `대학교`). 손실 변환이므로 기본값 OFF | `KoreanNormalizer` | `pip install "bpmg-korean-nlp[hanja]"` |
 
 ---
@@ -163,7 +144,7 @@ pytest tests/ -v
 - PEP 561 typed (`py.typed` 포함)
 - 모든 public API: type hint·docstring·`mypy --strict` 통과
 - 데이터 모델은 `@dataclass(frozen=True, slots=True)`
-- 싱글톤: `MeCabTokenizer`, `SpacingRestorer` (사전·모델 로딩 비용)
+- 싱글톤: `MeCabTokenizer` (사전 로딩 비용)
 
 ### 금지 사항
 

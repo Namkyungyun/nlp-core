@@ -46,21 +46,6 @@
 {"id": "tok_018", "type": "tokenize", "input": "운동 매일 30분", "expected_contains": ["운동", "30"]}
 {"id": "tok_019", "type": "tokenize", "input": "", "expected_contains": []}
 {"id": "tok_020", "type": "tokenize", "input": "테스트 문장입니다", "expected_contains": ["테스트", "문장"]}
-{"id": "spc_001", "type": "spacing", "input": "조사랑어미차이가뭐예요", "expected_contains": ["조사", "어미", "차이"]}
-{"id": "spc_002", "type": "spacing", "input": "한국어자연어처리", "expected_contains": ["한국어", "자연어", "처리"]}
-{"id": "spc_003", "type": "spacing", "input": "오늘날씨가좋다", "expected_contains": ["오늘", "날씨"]}
-{"id": "spc_004", "type": "spacing", "input": "서울특별시강남구", "expected_contains": ["서울", "강남구"]}
-{"id": "spc_005", "type": "spacing", "input": "안녕하세요반갑습니다", "expected_contains": ["안녕", "반갑"]}
-{"id": "spc_006", "type": "spacing", "input": "이메일주소를알려주세요", "expected_contains": ["이메일", "주소"]}
-{"id": "spc_007", "type": "spacing", "input": "회의는내일오후세시입니다", "expected_contains": ["회의", "내일"]}
-{"id": "spc_008", "type": "spacing", "input": "학교에서공부하고있어요", "expected_contains": ["학교", "공부"]}
-{"id": "spc_009", "type": "spacing", "input": "비가많이내려서우산이필요해요", "expected_contains": ["비", "우산"]}
-{"id": "spc_010", "type": "spacing", "input": "사과배귤포도", "expected_contains": ["사과"]}
-{"id": "spc_011", "type": "spacing", "input": "한국어 띄어쓰기 처리", "expected_contains": ["한국어", "띄어쓰기"]}
-{"id": "spc_012", "type": "spacing", "input": "", "expected": ""}
-{"id": "spc_013", "type": "spacing", "input": "친구들과영화를보러갔어요", "expected_contains": ["친구", "영화"]}
-{"id": "spc_014", "type": "spacing", "input": "맛있는음식을먹고싶다", "expected_contains": ["맛있", "음식"]}
-{"id": "spc_015", "type": "spacing", "input": "여행계획세우기시작했어요", "expected_contains": ["여행", "계획"]}
 {"id": "qa_lex_001", "type": "analyze_query", "target": "lexical", "input": "조사랑 어미 차이가 뭐예요", "expected_keywords_contains": ["조사", "어미", "차이"]}
 {"id": "qa_lex_002", "type": "analyze_query", "target": "lexical", "input": "서울에서 가장 좋은 식당", "expected_keywords_contains": ["서울", "식당"]}
 {"id": "qa_lex_003", "type": "analyze_query", "target": "lexical", "input": "한국어 자연어 처리 분야", "expected_keywords_contains": ["한국어", "자연어", "처리"]}
@@ -89,7 +74,6 @@
 {"id": "bd_001", "type": "normalize", "input": "    ", "expected": ""}
 {"id": "bd_002", "type": "tokenize", "input": "", "expected_contains": []}
 {"id": "bd_003", "type": "tokenize", "input": "😀😀😀", "expected_contains": []}
-{"id": "bd_005", "type": "spacing", "input": "", "expected": ""}
 {"id": "bd_006", "type": "analyze_query", "target": "lexical", "input": "   ", "expected_keywords_contains": []}
 {"id": "bd_007", "type": "tokenize", "input": "한자國家포함", "expected_contains": ["한자"]}
 {"id": "bd_008", "type": "analyze_query", "target": "semantic", "input": "어떤 단어든 통과", "expected_query_contains": "단어"}

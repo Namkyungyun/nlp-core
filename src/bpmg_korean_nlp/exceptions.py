@@ -12,7 +12,6 @@ __all__ = [
     "KoreanNlpError",
     "MeCabNotAvailableError",
     "PIIDetectedError",
-    "SpacingModelLoadError",
 ]
 
 
@@ -22,10 +21,6 @@ class KoreanNlpError(Exception):
 
 class MeCabNotAvailableError(KoreanNlpError):
     """Raised when the MeCab dictionary or runtime cannot be loaded."""
-
-
-class SpacingModelLoadError(KoreanNlpError):
-    """Raised when the PyKoSpacing model fails to load or initialize."""
 
 
 class InvalidInputError(KoreanNlpError):

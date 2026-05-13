@@ -2,9 +2,9 @@
 
 Each line of ``tests/fixtures/golden.jsonl`` describes a deterministic
 pipeline check: ``{id, type, input, expected*}``. Entries whose ``type``
-needs MeCab or PyKoSpacing are skipped cleanly when those heavy deps are
-absent so the same JSONL is the source of truth for both pure-Python CI
-runs and the full integration build.
+needs MeCab are skipped cleanly when the binding is absent so the same
+JSONL is the source of truth for both pure-Python CI runs and the full
+integration build.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ from bpmg_korean_nlp.models import (
     SemanticQueryResult,
 )
 from bpmg_korean_nlp.normalizer import KoreanNormalizer
-from tests.conftest import HAS_MECAB, HAS_PYKOSPACING
+from tests.conftest import HAS_MECAB
 
 _GOLDEN_PATH: Path = Path(__file__).parent / "fixtures" / "golden.jsonl"
 
@@ -53,7 +53,7 @@ def _idfn(entry: dict[str, Any]) -> str:
 
 def test_golden_set_minimum_size() -> None:
     """The on-disk golden set has the required minimum count."""
-    assert len(_ENTRIES) >= 90, f"Golden set must have at least 90 entries, got {len(_ENTRIES)}"
+    assert len(_ENTRIES) >= 75, f"Golden set must have at least 75 entries, got {len(_ENTRIES)}"
 
 
 def test_golden_set_required_categories() -> None:
@@ -64,7 +64,6 @@ def test_golden_set_required_categories() -> None:
     requirements = {
         "tokenize": 20,
         "normalize": 15,
-        "spacing": 15,
         "analyze_query": 25,
         "jamo_roundtrip": 10,
     }
@@ -97,7 +96,7 @@ def _run_jamo_roundtrip(entry: dict[str, Any]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# MeCab / PyKoSpacing-bound handlers (skipped when deps missing)
+# MeCab-bound handlers (skipped when dep missing)
 # ---------------------------------------------------------------------------
 
 
@@ -121,41 +120,16 @@ def _run_tokenize(entry: dict[str, Any]) -> None:
         )
 
 
-def _run_spacing(entry: dict[str, Any]) -> None:
-    if not HAS_PYKOSPACING:
-        pytest.skip("PyKoSpacing not installed")
-    from bpmg_korean_nlp.exceptions import SpacingModelLoadError
-    from bpmg_korean_nlp.spacing import SpacingRestorer
-
-    try:
-        restorer = SpacingRestorer.get_instance()
-    except SpacingModelLoadError as exc:
-        pytest.skip(f"PyKoSpacing not loadable: {exc}")
-    out = restorer.restore(entry["input"])
-    if "expected" in entry:
-        assert out == entry["expected"], (
-            f"[{entry['id']}] spacing: expected {entry['expected']!r}, got {out!r}"
-        )
-    if "expected_contains" in entry:
-        for token in entry["expected_contains"]:
-            assert token in out, f"[{entry['id']}] expected {token!r} in {out!r}"
-
-
 def _run_analyze_query(entry: dict[str, Any]) -> None:
     if not HAS_MECAB:
         pytest.skip("MeCab binding not installed")
-    if not HAS_PYKOSPACING:
-        pytest.skip("PyKoSpacing not installed")
-    from bpmg_korean_nlp.exceptions import (
-        MeCabNotAvailableError,
-        SpacingModelLoadError,
-    )
+    from bpmg_korean_nlp.exceptions import MeCabNotAvailableError
     from bpmg_korean_nlp.query_analyzer import QueryAnalyzer
 
     try:
         analyzer = QueryAnalyzer()
-    except (MeCabNotAvailableError, SpacingModelLoadError) as exc:
-        pytest.skip(f"Heavy deps not loadable: {exc}")
+    except MeCabNotAvailableError as exc:
+        pytest.skip(f"MeCab not loadable: {exc}")
 
     target = entry["target"]
     result = analyzer.analyze(entry["input"], target)
@@ -199,7 +173,6 @@ _DISPATCH = {
     "normalize": _run_normalize,
     "jamo_roundtrip": _run_jamo_roundtrip,
     "tokenize": _run_tokenize,
-    "spacing": _run_spacing,
     "analyze_query": _run_analyze_query,
 }
 

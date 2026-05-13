@@ -17,11 +17,10 @@ module never imports ``retrieval_core``, ``guardrail_core``, or
 ``chatbot_contracts`` and never performs any kind of scoring.
 
 The default singletons (:class:`KoreanNormalizer`,
-:class:`MeCabTokenizer`, :class:`SpacingRestorer`,
-:data:`DEFAULT_STOPWORDS`) are reused so that downstream callers pay the
-dictionary- and model-loading cost at most once per process. Each
-dependency can be replaced via the constructor for testing or custom
-deployments.
+:class:`MeCabTokenizer`, :data:`DEFAULT_STOPWORDS`) are reused so that
+downstream callers pay the dictionary-loading cost at most once per
+process. Each dependency can be replaced via the constructor for testing
+or custom deployments.
 """
 
 from __future__ import annotations
@@ -32,7 +31,6 @@ from typing import Final
 
 from bpmg_korean_nlp.enums import QueryTarget
 from bpmg_korean_nlp.exceptions import InvalidInputError
-from bpmg_korean_nlp.pii import check_pii
 from bpmg_korean_nlp.models import (
     GraphQueryResult,
     HybridQueryResult,
@@ -42,7 +40,7 @@ from bpmg_korean_nlp.models import (
     SemanticQueryResult,
 )
 from bpmg_korean_nlp.normalizer import KoreanNormalizer
-from bpmg_korean_nlp.spacing import SpacingRestorer
+from bpmg_korean_nlp.pii import check_pii
 from bpmg_korean_nlp.stopwords import DEFAULT_STOPWORDS
 from bpmg_korean_nlp.tokenizer import MeCabTokenizer
 
@@ -58,10 +56,10 @@ class QueryAnalyzer:
     """Turn raw user queries into retrieval-target representations.
 
     The analyzer is intentionally thin: every public call routes through
-    :meth:`analyze`, which normalizes and respaces the input once and
-    then dispatches to one of four target-specific helpers. The helpers
-    only differ in the post-processing step, so :meth:`analyze` keeps
-    the per-call dictionary work to a minimum.
+    :meth:`analyze`, which normalizes the input once and then dispatches
+    to one of four target-specific helpers. The helpers only differ in
+    the post-processing step, so :meth:`analyze` keeps the per-call
+    dictionary work to a minimum.
 
     Args:
         normalizer: Optional :class:`KoreanNormalizer`. When ``None`` the
@@ -69,21 +67,17 @@ class QueryAnalyzer:
         tokenizer: Optional :class:`MeCabTokenizer`. When ``None`` the
             process-wide singleton from :meth:`MeCabTokenizer.get_instance`
             is used.
-        spacing_restorer: Optional :class:`SpacingRestorer`. When ``None``
-            the process-wide singleton from
-            :meth:`SpacingRestorer.get_instance` is used.
         stopwords: Optional override for the stopword set used by the
             lexical pipeline. When ``None``, :data:`DEFAULT_STOPWORDS`
             is used.
     """
 
-    __slots__ = ("_normalizer", "_spacing_restorer", "_stopwords", "_tokenizer")
+    __slots__ = ("_normalizer", "_stopwords", "_tokenizer")
 
     def __init__(
         self,
         normalizer: KoreanNormalizer | None = None,
         tokenizer: MeCabTokenizer | None = None,
-        spacing_restorer: SpacingRestorer | None = None,
         stopwords: frozenset[str] | None = None,
     ) -> None:
         self._normalizer: KoreanNormalizer = (
@@ -91,9 +85,6 @@ class QueryAnalyzer:
         )
         self._tokenizer: MeCabTokenizer = (
             tokenizer if tokenizer is not None else MeCabTokenizer.get_instance()
-        )
-        self._spacing_restorer: SpacingRestorer = (
-            spacing_restorer if spacing_restorer is not None else SpacingRestorer.get_instance()
         )
         self._stopwords: frozenset[str] = stopwords if stopwords is not None else DEFAULT_STOPWORDS
 
@@ -118,8 +109,6 @@ class QueryAnalyzer:
                 filter after ``guardrail-core``).
             MeCabNotAvailableError: Propagated from the tokenizer when
                 MeCab cannot analyze the input (lexical, graph, hybrid).
-            SpacingModelLoadError: Propagated from the spacing restorer
-                when the PyKoSpacing model fails to initialize.
         """
         if not isinstance(text, str):
             raise InvalidInputError(f"QueryAnalyzer.analyze expects str, got {type(text).__name__}")
@@ -145,16 +134,8 @@ class QueryAnalyzer:
         return self._run_hybrid(prepared)
 
     def _preprocess(self, text: str) -> str:
-        """Apply the shared ``normalize → spacing`` pipeline.
-
-        Returns the empty string immediately when normalization produces
-        an empty result, avoiding an unnecessary model call on whitespace-
-        only input.
-        """
-        normalized = self._normalizer.normalize(text)
-        if not normalized:
-            return ""
-        return self._spacing_restorer.restore(normalized)
+        """Normalize raw input text before pipeline dispatch."""
+        return self._normalizer.normalize(text)
 
     def _run_lexical(self, text: str) -> LexicalQueryResult:
         """Lexical pipeline: ``tokenize + DEFAULT_STOPWORDS`` removal."""

@@ -13,7 +13,6 @@ from bpmg_korean_nlp.exceptions import (
     KoreanNlpError,
     MeCabNotAvailableError,
     PIIDetectedError,
-    SpacingModelLoadError,
 )
 from bpmg_korean_nlp.jamo_utils import (
     classify_char,
@@ -36,7 +35,6 @@ from bpmg_korean_nlp.models import (
 from bpmg_korean_nlp.normalizer import KoreanNormalizer
 from bpmg_korean_nlp.pii import PII_PATTERNS
 from bpmg_korean_nlp.query_analyzer import QueryAnalyzer, analyze_query
-from bpmg_korean_nlp.spacing import SpacingRestorer
 from bpmg_korean_nlp.stopwords import DEFAULT_STOPWORDS, merge_stopwords
 from bpmg_korean_nlp.tokenizer import MeCabTokenizer
 
@@ -61,8 +59,6 @@ __all__ = [
     "QueryResult",
     "QueryTarget",
     "SemanticQueryResult",
-    "SpacingModelLoadError",
-    "SpacingRestorer",
     "analyze_query",
     "check_mecab_dict",
     "classify_char",

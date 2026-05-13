@@ -85,12 +85,10 @@
 - **명세 언급**: 없음 (명세 §2에 미포함)
 - **확인 사항**: retrieval-engine 어댑터 설계에서 필요한 기능인지, 본 SDK에 두는 것이 적절한지 설계 담당자 판단
 
-### [?] SpacingRestorer (PyKoSpacing 기반)
-- **파일**: `src/bpmg_korean_nlp/spacing.py`
-- **내용**: PyKoSpacing 딥러닝 모델을 통한 띄어쓰기 복원
-- **명세 언급**: 없음
-- **특이사항**: PyKoSpacing이 PyPI 미배포 패키지이므로 런타임 의존 추가에 주의 필요
-- **확인 사항**: 본 SDK의 책임 범위에 포함할지 설계 담당자 판단
+### [x] SpacingRestorer (PyKoSpacing 기반) — 제거 완료
+- **파일**: `src/bpmg_korean_nlp/spacing.py` (삭제됨)
+- **결정**: SpacingRestorer를 SDK에서 완전 제거. PyKoSpacing(~1.5GB)은 선택적 의존성으로 전환
+- **처리 일자**: 2026-05-13
 
 ### [?] extract_choseong()
 - **파일**: `src/bpmg_korean_nlp/jamo_utils.py`
@@ -100,17 +98,76 @@
 
 ---
 
-## 4. 완료 확인 항목 (참고)
+## 4. SpacingRestorer 제거 작업 검증 포인트
 
-명세 §9 완료 정의 기준으로 코드 레벨 항목은 모두 충족된 상태입니다.
+> 2026-05-13 완료된 작업. 이후 회귀 발생 시 아래 체크리스트로 재확인.
+
+### 4.1 소스 코드 정리
+
+| 항목 | 확인 명령 | 기대 결과 |
+|---|---|---|
+| `spacing.py` 삭제 | `ls src/bpmg_korean_nlp/spacing.py` | No such file |
+| `SpacingModelLoadError` 제거 | `grep -r "SpacingModelLoadError" src/` | 결과 없음 |
+| `SpacingRestorer` export 제거 | `grep -r "SpacingRestorer" src/` | 결과 없음 |
+| `query_analyzer.py` 파라미터 제거 | `grep "spacing_restorer" src/bpmg_korean_nlp/query_analyzer.py` | 결과 없음 |
+| `__init__.py` export 제거 | `grep "SpacingRestorer\|SpacingModelLoadError" src/bpmg_korean_nlp/__init__.py` | 결과 없음 |
+
+### 4.2 의존성 정리
+
+| 항목 | 확인 명령 | 기대 결과 |
+|---|---|---|
+| pyproject.toml core deps | `grep "kss\|pykospacing\|tensorflow" pyproject.toml` | `[spacing]` optional 그룹 내에만 존재 |
+| 로컬 venv 패키지 제거 | `pip show kss pykospacing tensorflow 2>&1` | WARNING: Package(s) not found |
+| 의존성 충돌 없음 | `pip check` | No broken requirements |
+
+### 4.3 테스트 정리
+
+| 항목 | 확인 명령 | 기대 결과 |
+|---|---|---|
+| 삭제된 테스트 파일 | `ls tests/test_spacing*.py` | No such file |
+| spacing 참조 잔존 확인 | `grep -r "SpacingRestorer\|HAS_PYKOSPACING\|FakeSpacing\|_run_spacing" tests/` | 결과 없음 |
+| golden.jsonl spacing 항목 | `grep '"type": "spacing"' tests/fixtures/golden.jsonl` | 결과 없음 |
+| 전체 테스트 통과 | `pytest tests/ -q --tb=short` | 261 passed, 2 skipped (MeCab slow 제외 시) |
+| golden set 항목 수 | `wc -l tests/fixtures/golden.jsonl` | 80줄 이상 |
+
+### 4.4 문서 정리
+
+| 항목 | 확인 명령 | 기대 결과 |
+|---|---|---|
+| SPEC.md 잔존 참조 | `grep -n "SpacingRestorer\|SpacingModelLoadError\|spacing\.py" docs/SPEC.md` | 결과 없음 |
+| TEST_GUIDE.md 잔존 참조 | `grep -n "SpacingRestorer\|SpacingModelLoadError" docs/TEST_GUIDE.md` | 결과 없음 |
+| GUIDE.md 잔존 참조 | `grep -n "SpacingRestorer\|SpacingModelLoadError" docs/GUIDE.md` | 결과 없음 |
+| LOCAL.TEST.md 잔존 참조 | `grep -n "SpacingRestorer\|SpacingModelLoadError" docs/LOCAL.TEST.md` | 결과 없음 |
+| LOCAL.README.md 잔존 참조 | `grep -n "SpacingRestorer\|SpacingModelLoadError" docs/LOCAL.README.md` | 결과 없음 |
+| CLAUDE.md 잔존 참조 | `grep "SpacingRestorer\|spacing_restorer" CLAUDE.md` | 결과 없음 |
+| README.md SpacingRestorer 섹션 제거 | `grep "SpacingRestorer" README.md` | 결과 없음 |
+| README.md optional 안내 | `grep "\[spacing\]" README.md` | optional extras 설치 안내 존재 |
+
+### 4.5 품질 게이트
+
+```bash
+# 한 번에 전체 검증
+mypy --strict src/ 2>&1 | tail -3
+ruff check src tests 2>&1 | tail -3
+pytest tests/ -q --tb=short 2>&1 | tail -5
+grep -r "SpacingRestorer\|SpacingModelLoadError" src/ tests/ docs/ CLAUDE.md
+```
+
+모든 명령이 오류 없이 통과하고 마지막 grep 결과가 비어 있으면 제거 작업 완전 완료.
+
+---
+
+## 5. 완료 확인 항목 (참고)
+
+명세 §9 완료 정의 기준 코드 레벨 항목 상태 (SpacingRestorer 제거 반영).
 
 | 항목 | 결과 |
 |---|---|
 | §2 전체 책임 구현 | ✅ |
-| 단위 검증 커버리지 90% 이상 | ✅ 97.27% |
-| 골든셋 100건 이상 통과 | ✅ 110건 |
+| 단위 검증 커버리지 90% 이상 | ✅ (재측정 필요 — spacing 제거 후) |
+| 골든셋 75건 이상 통과 | ✅ 80건 (spacing 16건 제거 후, 기준 75로 조정) |
 | macOS 설치 절차 검증 | ✅ (로컬 실증) |
 | CI import 자동 차단 | ✅ `scripts/check_imports.py` |
-| `mypy --strict` 통과 | ✅ 13 files, no issues |
+| `mypy --strict` 통과 | ✅ spacing.py 제거 후 재확인 필요 |
 | 성능 p99 < 5ms | ✅ 0.18ms |
 | 성능 1000건 < 2초 | ✅ 0.15초 |

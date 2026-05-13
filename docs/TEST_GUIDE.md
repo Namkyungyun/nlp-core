@@ -34,43 +34,40 @@ PYTHONPATH=src python
 | T-06 | Normalizer | 잘못된 입력 타입 거부 | P0 |
 | T-07 | Normalizer | custom_substitutions 적용 | P1 |
 | T-08 | Normalizer | 빈 문자열 처리 | P0 |
-| T-09 | SpacingRestorer | 싱글톤 패턴 확인 | P0 |
-| T-10 | SpacingRestorer | 띄어쓰기 복원 | P0 |
-| T-11 | SpacingRestorer | 빈 문자열 처리 | P0 |
-| T-12 | MeCabTokenizer | 기본 토크나이즈 | P0 |
-| T-13 | MeCabTokenizer | 빈 문자열 → 빈 리스트 | P0 |
-| T-14 | MeCabTokenizer | pos_filter 적용 | P0 |
-| T-15 | MeCabTokenizer | remove_stopwords 적용 | P0 |
-| T-16 | MeCabTokenizer | analyze() — MorphToken 오프셋 | P0 |
-| T-17 | MeCabTokenizer | 싱글톤 패턴 확인 | P0 |
-| T-18 | MeCabTokenizer | 잘못된 입력 타입 거부 | P0 |
-| T-19 | QueryAnalyzer | LEXICAL 타겟 | P0 |
-| T-20 | QueryAnalyzer | SEMANTIC 타겟 | P0 |
-| T-21 | QueryAnalyzer | GRAPH 타겟 | P0 |
-| T-22 | QueryAnalyzer | HYBRID 타겟 | P0 |
-| T-23 | QueryAnalyzer | 문자열 타겟("lexical") | P0 |
-| T-24 | QueryAnalyzer | 빈 문자열 처리 | P0 |
-| T-25 | QueryAnalyzer | 잘못된 타겟 → InvalidInputError | P0 |
-| T-26 | QueryAnalyzer | analyze_query() 편의 함수 | P1 |
-| T-27 | jamo_utils | decompose() 기본 동작 | P0 |
-| T-28 | jamo_utils | compose() 기본 동작 | P0 |
-| T-29 | jamo_utils | round-trip 보장 | P0 |
-| T-30 | jamo_utils | extract_choseong() | P0 |
-| T-31 | jamo_utils | classify_char() 전 종류 | P0 |
-| T-32 | jamo_utils | 비한글 입력 → InvalidInputError | P0 |
-| T-33 | stopwords | frozenset 타입 및 불변성 | P0 |
-| T-34 | stopwords | merge_stopwords() | P0 |
-| T-35 | pii | PII_PATTERNS 구조 확인 | P0 |
-| T-36 | pii | PIIDetectedError — QueryAnalyzer 자동 차단 | P0 |
-| T-37 | pii | PIIDetectedError — 복수 패턴 동시 감지 | P0 |
-| T-38 | mecab_check | check_mecab_dict() 반환 타입 | P0 |
-| T-39 | mecab_check | 잘못된 경로 → available=False | P1 |
+| T-09 | MeCabTokenizer | 기본 토크나이즈 | P0 |
+| T-10 | MeCabTokenizer | 빈 문자열 → 빈 리스트 | P0 |
+| T-11 | MeCabTokenizer | pos_filter 적용 | P0 |
+| T-12 | MeCabTokenizer | remove_stopwords 적용 | P0 |
+| T-13 | MeCabTokenizer | analyze() — MorphToken 오프셋 | P0 |
+| T-14 | MeCabTokenizer | 싱글톤 패턴 확인 | P0 |
+| T-15 | MeCabTokenizer | 잘못된 입력 타입 거부 | P0 |
+| T-16 | QueryAnalyzer | LEXICAL 타겟 | P0 |
+| T-17 | QueryAnalyzer | SEMANTIC 타겟 | P0 |
+| T-18 | QueryAnalyzer | GRAPH 타겟 | P0 |
+| T-19 | QueryAnalyzer | HYBRID 타겟 | P0 |
+| T-20 | QueryAnalyzer | 문자열 타겟("lexical") | P0 |
+| T-21 | QueryAnalyzer | 빈 문자열 처리 | P0 |
+| T-22 | QueryAnalyzer | 잘못된 타겟 → InvalidInputError | P0 |
+| T-23 | QueryAnalyzer | analyze_query() 편의 함수 | P1 |
+| T-24 | jamo_utils | decompose() 기본 동작 | P0 |
+| T-25 | jamo_utils | compose() 기본 동작 | P0 |
+| T-26 | jamo_utils | round-trip 보장 | P0 |
+| T-27 | jamo_utils | extract_choseong() | P0 |
+| T-28 | jamo_utils | classify_char() 전 종류 | P0 |
+| T-29 | jamo_utils | 비한글 입력 → InvalidInputError | P0 |
+| T-30 | stopwords | frozenset 타입 및 불변성 | P0 |
+| T-31 | stopwords | merge_stopwords() | P0 |
+| T-32 | pii | PII_PATTERNS 구조 확인 | P0 |
+| T-33 | pii | PIIDetectedError — QueryAnalyzer 자동 차단 | P0 |
+| T-34 | pii | PIIDetectedError — 복수 패턴 동시 감지 | P0 |
+| T-35 | mecab_check | check_mecab_dict() 반환 타입 | P0 |
+| T-36 | mecab_check | 잘못된 경로 → available=False | P1 |
 
 ---
 
 ## T-01: Public API 전체 import
 
-**목적**: SDK의 29개 public symbol이 모두 import 가능한지 확인한다.
+**목적**: SDK의 27개 public symbol이 모두 import 가능한지 확인한다.
 
 **테스트 방법**:
 ```python
@@ -82,9 +79,9 @@ from bpmg_korean_nlp import (
     # 열거형
     QueryTarget, CharType,
     # 예외
-    KoreanNlpError, MeCabNotAvailableError, SpacingModelLoadError, InvalidInputError,
+    KoreanNlpError, MeCabNotAvailableError, InvalidInputError,
     # 핵심 클래스
-    KoreanNormalizer, SpacingRestorer, MeCabTokenizer, QueryAnalyzer,
+    KoreanNormalizer, MeCabTokenizer, QueryAnalyzer,
     # 함수
     analyze_query, decompose, compose, extract_choseong, classify_char,
     merge_stopwords, check_mecab_dict,
@@ -268,77 +265,7 @@ print("PASS")
 
 ---
 
-## T-09: SpacingRestorer — 싱글톤 패턴 확인
-
-**목적**: `get_instance()`가 동일 인스턴스를 반환하는지 확인한다.
-
-**테스트 방법**:
-```python
-from bpmg_korean_nlp import SpacingRestorer
-
-a = SpacingRestorer.get_instance()
-b = SpacingRestorer.get_instance()
-
-assert a is b, "싱글톤이어야 함"
-print("PASS: 동일 인스턴스 확인")
-print("타입:", type(a))
-```
-
-**기대 결과**:
-```
-PASS: 동일 인스턴스 확인
-타입: <class 'bpmg_korean_nlp.spacing.SpacingRestorer'>
-```
-
-> PyKoSpacing이 설치되지 않은 경우 `SpacingModelLoadError`가 발생할 수 있음. 정상 동작은 `pip install PyKoSpacing` 설치 후 확인.
-
----
-
-## T-10: SpacingRestorer — 띄어쓰기 복원
-
-**목적**: 띄어쓰기가 없는 한글 텍스트가 복원되는지 확인한다.
-
-**테스트 방법**:
-```python
-from bpmg_korean_nlp import SpacingRestorer
-
-sr = SpacingRestorer.get_instance()
-
-result = sr.restore("조사랑어미차이가뭐예요")
-print("결과:", result)
-
-# 복원된 결과에 주요 단어가 포함되어야 함
-assert "어미" in result or " " in result, "공백이 삽입되어야 함"
-print("PASS")
-```
-
-**기대 결과**:
-```
-결과: 조사랑 어미 차이가 뭐예요  (또는 유사한 띄어쓰기 복원 결과)
-PASS
-```
-
----
-
-## T-11: SpacingRestorer — 빈 문자열 처리
-
-**목적**: 빈 문자열 입력 시 빈 문자열이 반환되는지 확인한다.
-
-**테스트 방법**:
-```python
-from bpmg_korean_nlp import SpacingRestorer
-
-sr = SpacingRestorer.get_instance()
-result = sr.restore("")
-assert result == "", f"빈 문자열이어야 함, 실제: {result!r}"
-print("PASS")
-```
-
-**기대 결과**: `PASS`
-
----
-
-## T-12: MeCabTokenizer — 기본 토크나이즈
+## T-09: MeCabTokenizer — 기본 토크나이즈
 
 **목적**: 한글 문장이 형태소 리스트로 분리되는지 확인한다.
 
@@ -364,7 +291,7 @@ PASS
 
 ---
 
-## T-13: MeCabTokenizer — 빈 문자열 → 빈 리스트
+## T-10: MeCabTokenizer — 빈 문자열 → 빈 리스트
 
 **목적**: 빈 문자열 입력 시 빈 리스트가 반환되는지 확인한다.
 
@@ -382,7 +309,7 @@ print("PASS")
 
 ---
 
-## T-14: MeCabTokenizer — pos_filter 적용
+## T-11: MeCabTokenizer — pos_filter 적용
 
 **목적**: `pos_filter`로 지정한 품사(NNG, NNP)의 토큰만 반환되는지 확인한다.
 
@@ -409,7 +336,7 @@ PASS
 
 ---
 
-## T-15: MeCabTokenizer — remove_stopwords 적용
+## T-12: MeCabTokenizer — remove_stopwords 적용
 
 **목적**: `remove_stopwords=True` 시 기본 불용어가 제거되는지 확인한다.
 
@@ -435,7 +362,7 @@ print("PASS")
 
 ---
 
-## T-16: MeCabTokenizer — analyze() MorphToken 오프셋
+## T-13: MeCabTokenizer — analyze() MorphToken 오프셋
 
 **목적**: `analyze()` 결과의 `start`/`end` 오프셋이 원문과 일치하는지 확인한다.
 
@@ -467,7 +394,7 @@ PASS: 모든 오프셋 정확
 
 ---
 
-## T-17: MeCabTokenizer — 싱글톤 패턴 확인
+## T-14: MeCabTokenizer — 싱글톤 패턴 확인
 
 **목적**: 동일 설정으로 생성한 인스턴스가 동일 객체인지 확인한다.
 
@@ -488,7 +415,7 @@ print("PASS")
 
 ---
 
-## T-18: MeCabTokenizer — 잘못된 입력 타입 거부
+## T-15: MeCabTokenizer — 잘못된 입력 타입 거부
 
 **목적**: `str`이 아닌 값 입력 시 `InvalidInputError`가 발생하는지 확인한다.
 
@@ -515,7 +442,7 @@ PASS: list → InvalidInputError
 
 ---
 
-## T-19: QueryAnalyzer — LEXICAL 타겟
+## T-16: QueryAnalyzer — LEXICAL 타겟
 
 **목적**: LEXICAL 타겟이 `LexicalQueryResult`를 반환하고, keywords가 tuple인지 확인한다.
 
@@ -547,7 +474,7 @@ PASS
 
 ---
 
-## T-20: QueryAnalyzer — SEMANTIC 타겟
+## T-17: QueryAnalyzer — SEMANTIC 타겟
 
 **목적**: SEMANTIC 타겟이 `SemanticQueryResult`를 반환하고, 자연문이 보존되는지 확인한다.
 
@@ -564,7 +491,7 @@ print("query:", result.query)
 
 assert isinstance(result, SemanticQueryResult)
 assert isinstance(result.query, str)
-# 자연문이 보존되어야 함 (normalize+spacing 후 형태 유지)
+# 자연문이 보존되어야 함 (normalize 후 형태 유지)
 assert "어미" in result.query
 print("PASS")
 ```
@@ -572,13 +499,13 @@ print("PASS")
 **기대 결과**:
 ```
 타입: SemanticQueryResult
-query: 조사랑 어미 차이가 뭐예요  (normalize+spacing 적용 후)
+query: 조사랑 어미 차이가 뭐예요  (normalize 적용 후)
 PASS
 ```
 
 ---
 
-## T-21: QueryAnalyzer — GRAPH 타겟
+## T-18: QueryAnalyzer — GRAPH 타겟
 
 **목적**: GRAPH 타겟이 `GraphQueryResult`를 반환하고, seed_nodes가 NNG/NNP만 포함하는지 확인한다.
 
@@ -607,7 +534,7 @@ PASS
 
 ---
 
-## T-22: QueryAnalyzer — HYBRID 타겟
+## T-19: QueryAnalyzer — HYBRID 타겟
 
 **목적**: HYBRID 타겟이 세 결과를 모두 포함하는 `HybridQueryResult`를 반환하는지 확인한다.
 
@@ -645,7 +572,7 @@ PASS
 
 ---
 
-## T-23: QueryAnalyzer — 문자열 타겟 지원
+## T-20: QueryAnalyzer — 문자열 타겟 지원
 
 **목적**: `QueryTarget` enum 대신 문자열(`"lexical"`)로도 동작하는지 확인한다.
 
@@ -673,7 +600,7 @@ PASS
 
 ---
 
-## T-24: QueryAnalyzer — 빈 문자열 처리
+## T-21: QueryAnalyzer — 빈 문자열 처리
 
 **목적**: 빈 문자열 입력 시 각 타겟별로 빈 결과를 반환하는지 확인한다.
 
@@ -702,7 +629,7 @@ print("PASS")
 
 ---
 
-## T-25: QueryAnalyzer — 잘못된 타겟 → InvalidInputError
+## T-22: QueryAnalyzer — 잘못된 타겟 → InvalidInputError
 
 **목적**: 알 수 없는 타겟 문자열 입력 시 `InvalidInputError`가 발생하는지 확인한다.
 
@@ -726,7 +653,7 @@ PASS: Unknown query target: 'unknown_target'. Valid targets: [...]
 
 ---
 
-## T-26: QueryAnalyzer — analyze_query() 편의 함수
+## T-23: QueryAnalyzer — analyze_query() 편의 함수
 
 **목적**: 모듈 레벨 `analyze_query()` 함수가 기본 인스턴스를 재사용하는지 확인한다.
 
@@ -748,7 +675,7 @@ print("PASS")
 
 ---
 
-## T-27: jamo_utils — decompose() 기본 동작
+## T-24: jamo_utils — decompose() 기본 동작
 
 **목적**: 한글 음절이 초성/중성/종성으로 분리되는지 확인한다.
 
@@ -775,7 +702,7 @@ PASS
 
 ---
 
-## T-28: jamo_utils — compose() 기본 동작
+## T-25: jamo_utils — compose() 기본 동작
 
 **목적**: 초성/중성/종성으로 한글 음절을 합성하는지 확인한다.
 
@@ -793,7 +720,7 @@ print("PASS")
 
 ---
 
-## T-29: jamo_utils — round-trip 보장
+## T-26: jamo_utils — round-trip 보장
 
 **목적**: U+AC00~U+D7A3 전체 11,172자에 대해 `compose(*decompose(c)) == c`가 성립하는지 확인한다.
 
@@ -824,7 +751,7 @@ PASS: 11,172자 round-trip 전부 통과
 
 ---
 
-## T-30: jamo_utils — extract_choseong()
+## T-27: jamo_utils — extract_choseong()
 
 **목적**: 한글 음절의 초성만 추출하고 비한글 문자는 보존되는지 확인한다.
 
@@ -843,7 +770,7 @@ print("PASS")
 
 ---
 
-## T-31: jamo_utils — classify_char() 전 종류
+## T-28: jamo_utils — classify_char() 전 종류
 
 **목적**: 모든 `CharType` 분류가 올바르게 동작하는지 확인한다.
 
@@ -880,7 +807,7 @@ for char, expected in cases:
 
 ---
 
-## T-32: jamo_utils — 비한글 입력 → InvalidInputError
+## T-29: jamo_utils — 비한글 입력 → InvalidInputError
 
 **목적**: 한글 음절이 아닌 문자로 `decompose()` 호출 시 `InvalidInputError`가 발생하는지 확인한다.
 
@@ -907,7 +834,7 @@ PASS: '한국' → InvalidInputError
 
 ---
 
-## T-33: stopwords — frozenset 타입 및 불변성
+## T-30: stopwords — frozenset 타입 및 불변성
 
 **목적**: `DEFAULT_STOPWORDS`가 `frozenset`이고 변경이 불가능한지 확인한다.
 
@@ -938,7 +865,7 @@ PASS: 불변성 확인 → 'frozenset' object has no attribute 'add'
 
 ---
 
-## T-34: stopwords — merge_stopwords()
+## T-31: stopwords — merge_stopwords()
 
 **목적**: `merge_stopwords()`가 새로운 `frozenset`을 반환하고 원본을 변경하지 않는지 확인한다.
 
@@ -971,7 +898,7 @@ PASS
 
 ---
 
-## T-35: pii — PII_PATTERNS 구조 확인
+## T-32: pii — PII_PATTERNS 구조 확인
 
 **목적**: `PII_PATTERNS`가 4개의 `PIIPattern`을 담은 tuple인지 확인한다.
 
@@ -1009,7 +936,7 @@ PASS
 
 ---
 
-## T-36: pii — PIIDetectedError QueryAnalyzer 자동 차단
+## T-33: pii — PIIDetectedError QueryAnalyzer 자동 차단
 
 **목적**: PII가 포함된 입력을 `QueryAnalyzer.analyze()`가 자동으로 차단하는지 확인한다.
 
@@ -1017,11 +944,7 @@ PASS
 ```python
 from bpmg_korean_nlp import QueryAnalyzer, QueryTarget, PIIDetectedError
 
-class _NoopSpacing:
-    def restore(self, text: str) -> str:
-        return text
-
-analyzer = QueryAnalyzer(spacing_restorer=_NoopSpacing())
+analyzer = QueryAnalyzer()
 
 cases = [
     ("정상 쿼리 — 통과", "세종대학교 도서관 위치", False),
@@ -1046,7 +969,7 @@ for desc, text, should_block in cases:
 
 ---
 
-## T-37: pii — PIIDetectedError 복수 패턴 동시 감지
+## T-34: pii — PIIDetectedError 복수 패턴 동시 감지
 
 **목적**: 복수의 PII 패턴이 동시에 존재할 때 `matched`에 모두 포함되는지 확인한다.
 
@@ -1054,11 +977,7 @@ for desc, text, should_block in cases:
 ```python
 from bpmg_korean_nlp import QueryAnalyzer, QueryTarget, PIIDetectedError
 
-class _NoopSpacing:
-    def restore(self, text: str) -> str:
-        return text
-
-analyzer = QueryAnalyzer(spacing_restorer=_NoopSpacing())
+analyzer = QueryAnalyzer()
 
 try:
     analyzer.analyze("주민번호 900101-1234567 전화 010-9999-8888", QueryTarget.LEXICAL)
@@ -1078,7 +997,7 @@ PASS: 복수 패턴 동시 감지
 
 ---
 
-## T-38: mecab_check — check_mecab_dict() 반환 타입
+## T-35: mecab_check — check_mecab_dict() 반환 타입
 
 **목적**: `check_mecab_dict()`가 `DictCheckResult`를 반환하는지 확인한다.
 
@@ -1115,7 +1034,7 @@ PASS
 
 ---
 
-## T-39: mecab_check — 잘못된 경로 → available=False
+## T-36: mecab_check — 잘못된 경로 → available=False
 
 **목적**: 존재하지 않는 사전 경로를 전달 시 `available=False`와 오류 메시지가 반환되는지 확인한다.
 

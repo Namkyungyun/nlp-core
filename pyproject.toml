@@ -36,12 +36,17 @@ classifiers = [
 ]
 dependencies = [
     "python-mecab-ko",
-    "kss",
     "soynlp",
     "regex",
 ]
 
 [project.optional-dependencies]
+# 띄어쓰기 복원 (SpacingRestorer) — tensorflow 기반, 설치 용량 약 1.5 GB
+spacing = [
+    "kss",
+    "pykospacing @ git+https://github.com/haven-jeon/PyKoSpacing.git",
+    "tensorflow",
+]
 # Optional Hanja → Hangul transliteration (KoreanNormalizer(hanja_to_hangul=True))
 hanja = [
     "hanja",
@@ -58,6 +63,9 @@ dev = [
 # -----------------------------------------------------------------------------
 # Build (hatchling) — src layout
 # -----------------------------------------------------------------------------
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/bpmg_korean_nlp"]
 

@@ -12,7 +12,6 @@
 | MeCab 바이너리 | `mecab-ko` (일반 `mecab`과 충돌 — 교체 필요) |
 | MeCab 한국어 사전 | `mecab-ko-dic` |
 | Python MeCab 바인딩 | `python-mecab-ko` (pip으로 설치) |
-| PyKoSpacing | 별도 설치 필요 (띄어쓰기 복원 기능 사용 시) |
 
 ---
 
@@ -71,20 +70,6 @@ pytest tests/test_normalizer.py -v
 pytest tests/test_tokenizer.py -v
 pytest tests/test_jamo_utils.py -v
 ```
-
----
-
-## PyKoSpacing 설치 (선택)
-
-`SpacingRestorer` 기능이 필요한 경우 별도 설치한다.  
-PyKoSpacing은 PyPI에 배포되어 있지 않으므로 아래와 같이 설치한다.
-
-```bash
-pip install PyKoSpacing
-```
-
-미설치 상태에서 `SpacingRestorer.get_instance()`를 호출하면 `SpacingModelLoadError`가 발생한다.  
-`KoreanNormalizer`, `MeCabTokenizer`, `QueryAnalyzer`의 `LEXICAL`/`GRAPH` 타깃은 PyKoSpacing 없이도 정상 동작한다.
 
 ---
 

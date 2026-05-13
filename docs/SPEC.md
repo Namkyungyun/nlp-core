@@ -7,12 +7,11 @@
 3. [기능 명세](#3-기능-명세)
    - 3.1 [KoreanNormalizer — 텍스트 정규화](#31-koreannormalizer--텍스트-정규화)
    - 3.2 [MeCabTokenizer — 형태소 분석](#32-mecabtokenizer--형태소-분석)
-   - 3.3 [SpacingRestorer — 띄어쓰기 복원](#33-spacingrestorer--띄어쓰기-복원)
-   - 3.4 [QueryAnalyzer — 쿼리 변환](#34-queryanalyzer--쿼리-변환)
-   - 3.5 [JamoUtils — 한글 자모 유틸리티](#35-jamoutils--한글-자모-유틸리티)
-   - 3.6 [Stopwords — 불용어 집합](#36-stopwords--불용어-집합)
-   - 3.7 [PII — 개인정보 패턴 데이터](#37-pii--개인정보-패턴-데이터)
-   - 3.8 [MeCab 사전 점검](#38-mecab-사전-점검)
+   - 3.3 [QueryAnalyzer — 쿼리 변환](#33-queryanalyzer--쿼리-변환)
+   - 3.4 [JamoUtils — 한글 자모 유틸리티](#34-jamoutils--한글-자모-유틸리티)
+   - 3.5 [Stopwords — 불용어 집합](#35-stopwords--불용어-집합)
+   - 3.6 [PII — 개인정보 패턴 데이터](#36-pii--개인정보-패턴-데이터)
+   - 3.7 [MeCab 사전 점검](#37-mecab-사전-점검)
 4. [데이터 모델](#4-데이터-모델)
 5. [예외 계층](#5-예외-계층)
 6. [설계 제약](#6-설계-제약)
@@ -25,7 +24,7 @@
 
 `bpmg-korean-nlp`는 한국어 입력을 처리하는 시스템이 공통으로 사용하는 NLP 전처리 Python SDK입니다.
 
-- **역할**: normalize / spacing / tokenize / analyze / query transform
+- **역할**: normalize / tokenize / analyze / query transform
 - **비역할**: BM25 실행, 벡터 임베딩, 그래프 순회, 랭킹, PII 탐지·치환
 - **1차 소비자**: `retrieval-engine`의 한국어 토크나이저 어댑터
 - **Python**: 3.12 이상
@@ -42,7 +41,6 @@ src/bpmg_korean_nlp/
 ├── exceptions.py        # KoreanNlpError 계층
 ├── models.py            # frozen dataclass 데이터 모델 8종
 ├── normalizer.py        # KoreanNormalizer
-├── spacing.py           # SpacingRestorer (PyKoSpacing 싱글톤)
 ├── tokenizer.py         # MeCabTokenizer (mecab-ko-dic 싱글톤)
 ├── query_analyzer.py    # QueryAnalyzer, analyze_query()
 ├── jamo_utils.py        # decompose / compose / extract_choseong / classify_char
@@ -147,32 +145,7 @@ BM25 인덱싱용 토큰 배열을 반환합니다.
 
 ---
 
-### 3.3 SpacingRestorer — 띄어쓰기 복원
-
-**클래스**: `SpacingRestorer`  
-**파일**: `spacing.py`  
-**의존**: `pykospacing` (선택), `kss`
-
-#### 싱글톤 정책
-
-- 프로세스 내 단일 인스턴스 (`get_instance()`)
-- PyKoSpacing 모델 로딩이 최초 1회만 발생
-
-#### 처리 흐름
-
-1. `kss.split_sentences(text)` 로 문장 분리
-2. 각 문장에 PyKoSpacing 모델 적용
-3. 결과를 공백으로 합산하여 반환
-
-#### 주의사항
-
-- `pykospacing`은 PyPI 미배포 패키지이므로 별도 설치 필요
-- 미설치 시 `get_instance()` 호출 → `SpacingModelLoadError`
-- `QueryAnalyzer`를 SpacingRestorer 없이 사용하려면 생성자에 스텁 주입
-
----
-
-### 3.4 QueryAnalyzer — 쿼리 변환
+### 3.3 QueryAnalyzer — 쿼리 변환
 
 **클래스**: `QueryAnalyzer`  
 **함수**: `analyze_query()`  
@@ -192,7 +165,7 @@ BM25 인덱싱용 토큰 배열을 반환합니다.
 모든 타깃은 `analyze()` 진입 후 동일한 전처리를 공유합니다.
 
 ```
-입력 → normalize() → spacing.restore() → 타깃별 처리
+입력 → normalize() → 타깃별 처리
 ```
 
 #### HYBRID 병렬 처리
@@ -202,14 +175,11 @@ BM25 인덱싱용 토큰 배열을 반환합니다.
 #### DI (의존성 주입) 지원
 
 ```python
-# 기본 (PyKoSpacing 필요)
+# 기본
 qa = QueryAnalyzer()
 
-# 스텁 주입 (PyKoSpacing 없는 환경)
-class _NoopSpacing:
-    def restore(self, text): return text
-
-qa = QueryAnalyzer(spacing_restorer=_NoopSpacing())
+# DI 주입 예시 (테스트용)
+qa = QueryAnalyzer(normalizer=custom_normalizer, tokenizer=custom_tokenizer)
 ```
 
 #### `analyze_query()` 편의 함수
@@ -232,7 +202,7 @@ qa.analyze("쿼리", "Lexical")   # OK
 
 ---
 
-### 3.5 JamoUtils — 한글 자모 유틸리티
+### 3.4 JamoUtils — 한글 자모 유틸리티
 
 **파일**: `jamo_utils.py`  
 모든 함수는 모듈 수준 순수 함수입니다.
@@ -278,7 +248,7 @@ extract_choseong("한국 NLP")   # → "ㅎㄱ NLP"
 
 ---
 
-### 3.6 Stopwords — 불용어 집합
+### 3.5 Stopwords — 불용어 집합
 
 **상수**: `DEFAULT_STOPWORDS: frozenset[str]`  
 **함수**: `merge_stopwords(*additional, base=None) → frozenset[str]`  
@@ -291,7 +261,7 @@ extract_choseong("한국 NLP")   # → "ㅎㄱ NLP"
 
 ---
 
-### 3.7 PII — 2차 차단 필터
+### 3.6 PII — 2차 차단 필터
 
 **상수**: `PII_PATTERNS: tuple[PIIPattern, ...]`  
 **내부 함수**: `check_pii(text)` — `QueryAnalyzer.analyze()` 내부에서 자동 호출  
@@ -309,7 +279,7 @@ extract_choseong("한국 NLP")   # → "ㅎㄱ NLP"
 
 ---
 
-### 3.8 MeCab 사전 점검
+### 3.7 MeCab 사전 점검
 
 **함수**: `check_mecab_dict(dict_path=None) → DictCheckResult`  
 **파일**: `mecab_check.py`
@@ -344,7 +314,6 @@ extract_choseong("한국 NLP")   # → "ㅎㄱ NLP"
 ```
 KoreanNlpError (base)
 ├── MeCabNotAvailableError   — MeCab 바인딩 또는 사전 로드 실패
-├── SpacingModelLoadError    — PyKoSpacing 모델 로드 실패
 ├── InvalidInputError        — None / 비문자열 입력
 └── PIIDetectedError         — QueryAnalyzer 2차 PII 차단. matched: list[str] 속성
 ```
@@ -370,7 +339,7 @@ KoreanNlpError (base)
 
 ### 싱글톤 의무
 
-`MeCabTokenizer`, `SpacingRestorer` — 함수 호출마다 새 인스턴스 생성 금지
+`MeCabTokenizer` — 함수 호출마다 새 인스턴스 생성 금지
 
 ### 성능 기준
 
@@ -415,14 +384,10 @@ classDiagram
     class MeCabNotAvailableError {
         <<exception>>
     }
-    class SpacingModelLoadError {
-        <<exception>>
-    }
     class InvalidInputError {
         <<exception>>
     }
     KoreanNlpError <|-- MeCabNotAvailableError
-    KoreanNlpError <|-- SpacingModelLoadError
     KoreanNlpError <|-- InvalidInputError
 
     %% ── Data Models ─────────────────────────────────────
@@ -507,17 +472,9 @@ classDiagram
         -_locate(text, surface, cursor) tuple
     }
 
-    class SpacingRestorer {
-        -SpacingRestorer _instance$
-        -_SpacingFn _spacing_fn
-        +get_instance()$ SpacingRestorer
-        +restore(text) str
-    }
-
     class QueryAnalyzer {
         -KoreanNormalizer _normalizer
         -MeCabTokenizer _tokenizer
-        -SpacingRestorer _spacing_restorer
         -frozenset _stopwords
         +analyze(text, target) QueryResult
         -_preprocess(text) str
@@ -557,7 +514,6 @@ classDiagram
     %% ── Relationships ────────────────────────────────────
     QueryAnalyzer --> KoreanNormalizer : uses
     QueryAnalyzer --> MeCabTokenizer : uses
-    QueryAnalyzer --> SpacingRestorer : uses
     QueryAnalyzer --> StopwordsModule : uses DEFAULT_STOPWORDS
     QueryAnalyzer ..> QueryTarget : dispatches on
     QueryAnalyzer ..> LexicalQueryResult : returns
@@ -578,8 +534,6 @@ classDiagram
 
     KoreanNormalizer ..> InvalidInputError : raises
     MeCabTokenizer ..> InvalidInputError : raises
-    SpacingRestorer ..> SpacingModelLoadError : raises
-    SpacingRestorer ..> InvalidInputError : raises
 ```
 
 ---
@@ -703,52 +657,13 @@ sequenceDiagram
 
 ---
 
-### 8.5 SpacingRestorer.restore()
-
-```mermaid
-sequenceDiagram
-    participant C as 호출자
-    participant SR as SpacingRestorer
-    participant KSS as kss
-    participant PKS as PyKoSpacing
-
-    C->>SR: get_instance()
-    alt _instance is None (최초 호출)
-        SR->>PKS: Spacing() 모델 로드
-        alt ImportError
-            SR-->>C: raise SpacingModelLoadError
-        end
-        PKS-->>SR: spacing_fn
-        SR->>SR: _instance 저장
-    end
-    SR-->>C: SpacingRestorer 인스턴스
-
-    C->>SR: restore(text)
-    alt text가 str이 아님
-        SR-->>C: raise InvalidInputError
-    end
-    alt text == ""
-        SR-->>C: return ""
-    end
-    SR->>KSS: split_sentences(text)
-    KSS-->>SR: [문장1, 문장2, ...]
-    loop 각 문장
-        SR->>PKS: spacing_fn(문장)
-        PKS-->>SR: 띄어쓰기 복원된 문장
-    end
-    SR-->>C: " ".join(결과들)
-```
-
----
-
-### 8.6 QueryAnalyzer.analyze() — LEXICAL
+### 8.5 QueryAnalyzer.analyze() — LEXICAL
 
 ```mermaid
 sequenceDiagram
     participant C as 호출자
     participant QA as QueryAnalyzer
     participant N as KoreanNormalizer
-    participant SR as SpacingRestorer
     participant T as MeCabTokenizer
 
     C->>QA: analyze(text, "lexical")
@@ -760,23 +675,20 @@ sequenceDiagram
     alt normalized == ""
         QA-->>C: LexicalQueryResult(keywords=(), query="")
     end
-    QA->>SR: restore(normalized)
-    SR-->>QA: spaced
-    QA->>T: tokenize(spaced, remove_stopwords=True, stopwords=self._stopwords)
+    QA->>T: tokenize(normalized, remove_stopwords=True, stopwords=self._stopwords)
     T-->>QA: tokens: list[str]
     QA-->>C: LexicalQueryResult(keywords=tuple(tokens), query=" ".join(tokens))
 ```
 
 ---
 
-### 8.7 QueryAnalyzer.analyze() — HYBRID (병렬)
+### 8.6 QueryAnalyzer.analyze() — HYBRID (병렬)
 
 ```mermaid
 sequenceDiagram
     participant C as 호출자
     participant QA as QueryAnalyzer
     participant N as KoreanNormalizer
-    participant SR as SpacingRestorer
     participant TPE as ThreadPoolExecutor
     participant LEX as _run_lexical
     participant SEM as _run_semantic
@@ -785,16 +697,14 @@ sequenceDiagram
     C->>QA: analyze(text, "hybrid")
     QA->>N: normalize(text)
     N-->>QA: normalized
-    QA->>SR: restore(normalized)
-    SR-->>QA: prepared
 
     QA->>TPE: ThreadPoolExecutor(max_workers=3)
     par 병렬 실행
-        TPE->>LEX: submit(_run_lexical, prepared)
+        TPE->>LEX: submit(_run_lexical, normalized)
     and
-        TPE->>SEM: submit(_run_semantic, prepared)
+        TPE->>SEM: submit(_run_semantic, normalized)
     and
-        TPE->>GPH: submit(_run_graph, prepared)
+        TPE->>GPH: submit(_run_graph, normalized)
     end
     LEX-->>TPE: LexicalQueryResult
     SEM-->>TPE: SemanticQueryResult
@@ -805,7 +715,7 @@ sequenceDiagram
 
 ---
 
-### 8.8 check_mecab_dict()
+### 8.7 check_mecab_dict()
 
 ```mermaid
 sequenceDiagram
