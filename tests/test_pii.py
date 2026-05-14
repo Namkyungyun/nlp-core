@@ -1,4 +1,4 @@
-"""Tests for ``bpmg_korean_nlp.pii`` — secondary PII blocking filter."""
+"""``bpmg_korean_nlp.pii`` 테스트 — 2차 PII 차단 필터."""
 
 from __future__ import annotations
 
@@ -11,42 +11,42 @@ from bpmg_korean_nlp.models import PIIPattern
 from bpmg_korean_nlp.pii import PII_PATTERNS
 
 # ---------------------------------------------------------------------------
-# PII_PATTERNS catalogue
+# PII_PATTERNS 카탈로그
 # ---------------------------------------------------------------------------
 
 
 def test_pii_patterns_type() -> None:
-    """The catalogue is exposed as an immutable tuple of PIIPattern."""
+    """카탈로그는 PIIPattern의 불변 튜플로 노출됩니다."""
     assert isinstance(PII_PATTERNS, tuple)
     for p in PII_PATTERNS:
         assert isinstance(p, PIIPattern)
 
 
 def test_pii_patterns_count() -> None:
-    """Exactly four canonical PII categories are catalogued."""
+    """정확히 네 가지 정식 PII 범주가 카탈로그에 있습니다."""
     assert len(PII_PATTERNS) == 4
 
 
 def test_each_pattern_is_compiled_regex() -> None:
-    """Every entry exposes a compiled ``re.Pattern``."""
+    """모든 항목은 컴파일된 ``re.Pattern``을 노출합니다."""
     for p in PII_PATTERNS:
         assert isinstance(p.pattern, re.Pattern)
 
 
 def test_pii_patterns_unique_names() -> None:
-    """Pattern names form a set — no duplicates."""
+    """패턴 이름은 집합을 형성합니다 — 중복 없음."""
     names = {p.name for p in PII_PATTERNS}
     assert len(names) == len(PII_PATTERNS)
 
 
 def test_pii_patterns_have_descriptions() -> None:
-    """Each pattern carries a non-empty description."""
+    """각 패턴은 비어 있지 않은 설명을 포함합니다."""
     for p in PII_PATTERNS:
         assert p.description != ""
 
 
 # ---------------------------------------------------------------------------
-# Pattern matching sanity checks
+# 패턴 매칭 정상 동작 확인
 # ---------------------------------------------------------------------------
 
 
@@ -60,7 +60,7 @@ def test_pii_patterns_have_descriptions() -> None:
     ],
 )
 def test_pattern_matches_sample(name: str, sample: str) -> None:
-    """Each named pattern matches a plausible sample value."""
+    """각 이름 있는 패턴이 타당한 샘플 값과 일치합니다."""
     p = next(x for x in PII_PATTERNS if x.name == name)
     assert p.pattern.search(sample) is not None
 
@@ -74,19 +74,19 @@ def test_pattern_matches_sample(name: str, sample: str) -> None:
     ],
 )
 def test_patterns_reject_garbage(non_match: str) -> None:
-    """None of the catalogued patterns fullmatch obviously-wrong input."""
+    """카탈로그의 어떤 패턴도 명백히 잘못된 입력과 완전 일치하지 않습니다."""
     for p in PII_PATTERNS:
         assert p.pattern.fullmatch(non_match) is None
 
 
 # ---------------------------------------------------------------------------
-# PIIDetectedError via QueryAnalyzer (auto-integration)
-# di_query_analyzer uses fake DI — pii check fires before tokenizer
+# QueryAnalyzer를 통한 PIIDetectedError (자동 통합)
+# di_query_analyzer는 가짜 DI를 사용 — pii 체크가 토크나이저보다 먼저 실행됨
 # ---------------------------------------------------------------------------
 
 
 def test_query_analyzer_blocks_mobile_phone(di_query_analyzer: object) -> None:
-    """QueryAnalyzer.analyze() raises PIIDetectedError on mobile phone number."""
+    """QueryAnalyzer.analyze()는 휴대전화 번호에 대해 PIIDetectedError를 발생시킵니다."""
     from bpmg_korean_nlp.enums import QueryTarget
     from bpmg_korean_nlp.query_analyzer import QueryAnalyzer
 
@@ -97,7 +97,7 @@ def test_query_analyzer_blocks_mobile_phone(di_query_analyzer: object) -> None:
 
 
 def test_query_analyzer_blocks_resident_id(di_query_analyzer: object) -> None:
-    """QueryAnalyzer.analyze() raises PIIDetectedError on resident registration number."""
+    """QueryAnalyzer.analyze()는 주민등록번호에 대해 PIIDetectedError를 발생시킵니다."""
     from bpmg_korean_nlp.enums import QueryTarget
     from bpmg_korean_nlp.query_analyzer import QueryAnalyzer
 
@@ -108,12 +108,12 @@ def test_query_analyzer_blocks_resident_id(di_query_analyzer: object) -> None:
 
 
 def test_pii_error_matched_contains_all_patterns(di_query_analyzer: object) -> None:
-    """When multiple PII patterns appear, all are reported in matched."""
+    """여러 PII 패턴이 나타나면 모두 matched에 보고됩니다."""
     from bpmg_korean_nlp.enums import QueryTarget
     from bpmg_korean_nlp.query_analyzer import QueryAnalyzer
 
     qa: QueryAnalyzer = di_query_analyzer  # type: ignore[assignment]
-    # contains both mobile_phone and resident_id
+    # mobile_phone과 resident_id 모두 포함
     text = "연락처 010-9999-1234 주민번호 900101-1234567"
     with pytest.raises(PIIDetectedError) as exc_info:
         qa.analyze(text, QueryTarget.HYBRID)
@@ -123,7 +123,7 @@ def test_pii_error_matched_contains_all_patterns(di_query_analyzer: object) -> N
 
 
 def test_query_analyzer_passes_clean_input(di_query_analyzer: object) -> None:
-    """Normal input without PII passes through without raising."""
+    """PII가 없는 정상 입력은 예외 없이 통과합니다."""
     from bpmg_korean_nlp.enums import QueryTarget
     from bpmg_korean_nlp.query_analyzer import QueryAnalyzer
 
@@ -133,19 +133,19 @@ def test_query_analyzer_passes_clean_input(di_query_analyzer: object) -> None:
 
 
 # ---------------------------------------------------------------------------
-# PIIDetectedError exception contract
+# PIIDetectedError 예외 계약
 # ---------------------------------------------------------------------------
 
 
 def test_pii_error_is_korean_nlp_error() -> None:
-    """PIIDetectedError inherits from KoreanNlpError."""
+    """PIIDetectedError는 KoreanNlpError를 상속합니다."""
     from bpmg_korean_nlp.exceptions import KoreanNlpError
 
     assert issubclass(PIIDetectedError, KoreanNlpError)
 
 
 def test_pii_detected_error_matched_attribute() -> None:
-    """PIIDetectedError.matched carries the list of triggered pattern names."""
+    """PIIDetectedError.matched는 트리거된 패턴 이름 목록을 보유합니다."""
     err = PIIDetectedError(["mobile_phone", "resident_id"])
     assert err.matched == ["mobile_phone", "resident_id"]
     assert "mobile_phone" in str(err)

@@ -1,11 +1,10 @@
-"""Health check for ``mecab-ko-dic`` availability.
+"""``mecab-ko-dic`` 가용성 헬스 체크.
 
-Wraps the binding-import + dictionary-load sequence used by
-:class:`bpmg_korean_nlp.tokenizer.MeCabTokenizer` and reports the outcome
-as a :class:`DictCheckResult` value (success or failure, both surfaced
-as data). Designed for CI pipelines and container startup probes — it
-never raises for a missing dictionary, so the caller decides whether to
-abort or degrade.
+:class:`bpmg_korean_nlp.tokenizer.MeCabTokenizer`가 사용하는 바인딩 임포트 +
+사전 로드 시퀀스를 래핑하고, 결과를 :class:`DictCheckResult` 값(성공 또는 실패,
+모두 데이터로 표면화)으로 보고합니다. CI 파이프라인 및 컨테이너 시작 프로브를 위해
+설계되었으며 — 사전이 없어도 예외를 발생시키지 않아 호출자가 중단 또는 저하 여부를
+결정합니다.
 """
 
 from __future__ import annotations
@@ -23,17 +22,17 @@ _DEFAULT_DICT_PATHS: tuple[str, ...] = (
     "/usr/local/lib/mecab/dic/mecab-ko-dic",
     # macOS Homebrew (Apple Silicon)
     "/opt/homebrew/lib/mecab/dic/mecab-ko-dic",
-    # Ubuntu / Debian system packages
+    # Ubuntu / Debian 시스템 패키지
     "/usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ko-dic",
     "/usr/lib/aarch64-linux-gnu/mecab/dic/mecab-ko-dic",
-    # Generic install + Docker slim image
+    # 일반 설치 + Docker slim 이미지
     "/usr/share/mecab/dic/mecab-ko-dic",
     "/usr/local/share/mecab/dic/mecab-ko-dic",
 )
 
 
 def _detect_default_dict_path() -> str | None:
-    """Return the first installed dictionary path or ``None`` if no candidate exists."""
+    """설치된 첫 번째 사전 경로를 반환하거나, 후보가 없으면 ``None``을 반환합니다."""
     for candidate in _DEFAULT_DICT_PATHS:
         if Path(candidate).is_dir():
             return candidate
@@ -41,11 +40,10 @@ def _detect_default_dict_path() -> str | None:
 
 
 def _read_dict_version(dict_path: str) -> str | None:
-    """Parse ``dicrc`` under *dict_path* and return its ``version`` value.
+    """*dict_path* 아래의 ``dicrc``를 파싱하여 ``version`` 값을 반환합니다.
 
-    Returns ``None`` if the file is missing, unreadable, or carries no
-    ``version`` key — version reporting is best-effort and never blocks
-    a successful availability check.
+    파일이 없거나, 읽을 수 없거나, ``version`` 키가 없으면 ``None``을 반환합니다 —
+    버전 보고는 최선 노력(best-effort)이며 가용성 체크를 차단하지 않습니다.
     """
     dicrc = Path(dict_path) / "dicrc"
     if not dicrc.is_file():
@@ -68,18 +66,17 @@ def _read_dict_version(dict_path: str) -> str | None:
 
 
 def check_mecab_dict(dict_path: str | None = None) -> DictCheckResult:
-    """Probe whether ``mecab-ko-dic`` is installed and loadable.
+    """``mecab-ko-dic``이 설치되어 있고 로드 가능한지 확인합니다.
 
-    Args:
-        dict_path: Explicit dictionary path to probe. When ``None``,
-            falls back to a list of well-known install locations
-            (macOS Homebrew, Ubuntu, Docker slim).
+    인자:
+        dict_path: 확인할 사전 경로를 명시적으로 지정합니다. ``None``이면
+            잘 알려진 설치 위치 목록(macOS Homebrew, Ubuntu, Docker slim)으로
+            폴백합니다.
 
-    Returns:
-        A :class:`DictCheckResult`. ``available=True`` iff the
-        ``python-mecab-ko`` binding imports cleanly *and* a smoke-test
-        analysis succeeds. On failure, ``error`` carries a one-line
-        diagnostic.
+    반환:
+        :class:`DictCheckResult`. ``python-mecab-ko`` 바인딩이 정상적으로
+        임포트되고 스모크 테스트 분석이 성공하면 ``available=True``.
+        실패 시 ``error``에 한 줄 진단 메시지가 담깁니다.
     """
     try:
         from mecab import MeCab as _MeCab

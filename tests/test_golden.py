@@ -1,10 +1,9 @@
-"""Golden input/output regression suite.
+"""골든 입력/출력 회귀 테스트 스위트.
 
-Each line of ``tests/fixtures/golden.jsonl`` describes a deterministic
-pipeline check: ``{id, type, input, expected*}``. Entries whose ``type``
-needs MeCab are skipped cleanly when the binding is absent so the same
-JSONL is the source of truth for both pure-Python CI runs and the full
-integration build.
+``tests/fixtures/golden.jsonl``의 각 줄은 결정적 파이프라인 체크를 기술합니다:
+``{id, type, input, expected*}``. ``type``에 MeCab이 필요한 항목은 바인딩이 없으면
+깔끔하게 건너뛰므로, 동일한 JSONL이 순수 Python CI 실행과 전체 통합 빌드 모두의
+진실 소스가 됩니다.
 """
 
 from __future__ import annotations
@@ -30,7 +29,7 @@ _GOLDEN_PATH: Path = Path(__file__).parent / "fixtures" / "golden.jsonl"
 
 
 def _load_golden() -> list[dict[str, Any]]:
-    """Read every JSONL record from the golden file."""
+    """골든 파일에서 모든 JSONL 레코드를 읽습니다."""
     entries: list[dict[str, Any]] = []
     with _GOLDEN_PATH.open(encoding="utf-8") as handle:
         for line_no, line in enumerate(handle, start=1):
@@ -52,12 +51,12 @@ def _idfn(entry: dict[str, Any]) -> str:
 
 
 def test_golden_set_minimum_size() -> None:
-    """The on-disk golden set has the required minimum count."""
+    """디스크의 골든 집합이 요구되는 최소 개수를 충족합니다."""
     assert len(_ENTRIES) >= 75, f"Golden set must have at least 75 entries, got {len(_ENTRIES)}"
 
 
 def test_golden_set_required_categories() -> None:
-    """Every required type-bucket appears with its target minimum."""
+    """모든 필수 타입 버킷이 목표 최솟값을 충족합니다."""
     by_type: dict[str, int] = {}
     for e in _ENTRIES:
         by_type[e["type"]] = by_type.get(e["type"], 0) + 1
@@ -73,7 +72,7 @@ def test_golden_set_required_categories() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Pure-Python entry handlers (always runnable)
+# 순수 Python 핸들러 (항상 실행 가능)
 # ---------------------------------------------------------------------------
 
 
@@ -96,7 +95,7 @@ def _run_jamo_roundtrip(entry: dict[str, Any]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# MeCab-bound handlers (skipped when dep missing)
+# MeCab 의존 핸들러 (의존성 없으면 건너뜀)
 # ---------------------------------------------------------------------------
 
 
@@ -180,7 +179,7 @@ _DISPATCH = {
 @pytest.mark.golden
 @pytest.mark.parametrize("entry", _ENTRIES, ids=_idfn)
 def test_golden_entry(entry: dict[str, Any]) -> None:
-    """Each golden entry is executed by the handler for its ``type``."""
+    """각 골든 항목은 해당 ``type``의 핸들러에 의해 실행됩니다."""
     handler = _DISPATCH.get(entry["type"])
     if handler is None:
         pytest.fail(f"Unknown golden type: {entry['type']}")

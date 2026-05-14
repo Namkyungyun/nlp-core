@@ -1,26 +1,22 @@
-"""Query analysis for korean-nlp-core.
+"""korean-nlp-core 쿼리 분석.
 
-:class:`QueryAnalyzer` is a *pure transformation layer* that rewrites a
-user's natural-language query into one of four retrieval-target
-representations:
+:class:`QueryAnalyzer`는 사용자의 자연어 쿼리를 네 가지 검색 대상 표현 중
+하나로 변환하는 *순수 변환 계층*입니다:
 
-* ``LEXICAL``   — BM25-ready tokens with stopwords removed.
-* ``SEMANTIC``  — the natural sentence preserved verbatim, for embedding
-  models that consume free-form text.
-* ``GRAPH``     — seed nouns/entities (Sejong POS ``NNG`` / ``NNP``).
-* ``HYBRID``    — all three results bundled together; the three pipelines
-  run in parallel because they share the same normalized input.
+* ``LEXICAL``   — 불용어가 제거된 BM25 준비 토큰.
+* ``SEMANTIC``  — 자유 형식 텍스트를 소비하는 임베딩 모델을 위해 자연 문장을 그대로 보존.
+* ``GRAPH``     — 시드 명사/개체 (세종 POS ``NNG`` / ``NNP``).
+* ``HYBRID``    — 세 가지 결과를 모두 묶음; 동일한 정규화된 입력을 공유하므로
+  세 파이프라인이 병렬로 실행됩니다.
 
-Every actual retrieval step — BM25 scoring, vector lookup, graph
-traversal, ranking — is the consumer's responsibility. By contract this
-module never imports ``retrieval_core``, ``guardrail_core``, or
-``chatbot_contracts`` and never performs any kind of scoring.
+BM25 스코어링, 벡터 조회, 그래프 탐색, 랭킹 등 실제 검색 단계는 모두
+소비자의 책임입니다. 계약상 이 모듈은 ``retrieval_core``, ``guardrail_core``,
+``chatbot_contracts``를 임포트하지 않으며 어떠한 종류의 스코어링도 수행하지 않습니다.
 
-The default singletons (:class:`KoreanNormalizer`,
-:class:`MeCabTokenizer`, :data:`DEFAULT_STOPWORDS`) are reused so that
-downstream callers pay the dictionary-loading cost at most once per
-process. Each dependency can be replaced via the constructor for testing
-or custom deployments.
+기본 싱글톤(:class:`KoreanNormalizer`, :class:`MeCabTokenizer`,
+:data:`DEFAULT_STOPWORDS`)은 재사용되어 다운스트림 호출자가 프로세스당 최대 한 번만
+사전 로드 비용을 지불합니다. 각 의존성은 테스트 또는 커스텀 배포를 위해
+생성자를 통해 교체할 수 있습니다.
 """
 
 from __future__ import annotations
@@ -61,23 +57,21 @@ _LONG_INPUT_THRESHOLD: Final[int] = 10_000
 
 
 class QueryAnalyzer:
-    """Turn raw user queries into retrieval-target representations.
+    """원시 사용자 쿼리를 검색 대상 표현으로 변환합니다.
 
-    The analyzer is intentionally thin: every public call routes through
-    :meth:`analyze`, which normalizes the input once and then dispatches
-    to one of four target-specific helpers. The helpers only differ in
-    the post-processing step, so :meth:`analyze` keeps the per-call
-    dictionary work to a minimum.
+    분석기는 의도적으로 얇게 설계되었습니다: 모든 공개 호출은 :meth:`analyze`를
+    통해 라우팅되며, 입력을 한 번 정규화한 후 네 가지 대상별 헬퍼 중 하나로
+    디스패치합니다. 헬퍼는 후처리 단계만 다르므로 :meth:`analyze`는 호출당
+    사전 작업을 최소로 유지합니다.
 
-    Args:
-        normalizer: Optional :class:`KoreanNormalizer`. When ``None`` the
-            locked default (:meth:`KoreanNormalizer.default`) is used.
-        tokenizer: Optional :class:`MeCabTokenizer`. When ``None`` the
-            process-wide singleton from :meth:`MeCabTokenizer.get_instance`
-            is used.
-        stopwords: Optional override for the stopword set used by the
-            lexical pipeline. When ``None``, :data:`DEFAULT_STOPWORDS`
-            is used.
+    인자:
+        normalizer: 선택적 :class:`KoreanNormalizer`. ``None``이면 고정된
+            기본값(:meth:`KoreanNormalizer.default`)이 사용됩니다.
+        tokenizer: 선택적 :class:`MeCabTokenizer`. ``None``이면
+            :meth:`MeCabTokenizer.get_instance`의 프로세스 전체 싱글톤이
+            사용됩니다.
+        stopwords: lexical 파이프라인에 사용되는 불용어 집합의 선택적 재정의.
+            ``None``이면 :data:`DEFAULT_STOPWORDS`가 사용됩니다.
     """
 
     __slots__ = ("_normalizer", "_stopwords", "_tokenizer")
@@ -97,26 +91,26 @@ class QueryAnalyzer:
         self._stopwords: frozenset[str] = stopwords if stopwords is not None else DEFAULT_STOPWORDS
 
     def analyze(self, text: str, target: QueryTarget | str) -> QueryResult:
-        """Analyze *text* for the given retrieval *target*.
+        """주어진 검색 *target*에 대해 *text*를 분석합니다.
 
-        Args:
-            text: The raw user query.
-            target: A :class:`QueryTarget` member or the equivalent string
+        인자:
+            text: 원시 사용자 쿼리.
+            target: :class:`QueryTarget` 멤버 또는 동등한 문자열
                 (``"lexical"``, ``"semantic"``, ``"graph"``, ``"hybrid"``).
-                The string form is case-insensitive.
+                문자열 형식은 대소문자를 구분하지 않습니다.
 
-        Returns:
-            One of :class:`LexicalQueryResult`, :class:`SemanticQueryResult`,
-            :class:`GraphQueryResult`, or :class:`HybridQueryResult`,
-            matching *target*.
+        반환:
+            *target*에 해당하는 :class:`LexicalQueryResult`,
+            :class:`SemanticQueryResult`, :class:`GraphQueryResult`,
+            :class:`HybridQueryResult` 중 하나.
 
-        Raises:
-            InvalidInputError: If *text* is not a ``str`` or if *target*
-                is neither a :class:`QueryTarget` nor a recognized string.
-            PIIDetectedError: If *text* contains any PII pattern (secondary
-                filter after ``guardrail-core``).
-            MeCabNotAvailableError: Propagated from the tokenizer when
-                MeCab cannot analyze the input (lexical, graph, hybrid).
+        예외:
+            InvalidInputError: *text*가 ``str``이 아니거나 *target*이
+                :class:`QueryTarget`도 인식된 문자열도 아닌 경우.
+            PIIDetectedError: *text*에 PII 패턴이 포함된 경우 (``guardrail-core``
+                이후 2차 필터).
+            MeCabNotAvailableError: MeCab이 입력을 분석할 수 없을 때(lexical,
+                graph, hybrid) 토크나이저에서 전파됩니다.
         """
         if not isinstance(text, str):
             raise InvalidInputError(f"QueryAnalyzer.analyze expects str, got {type(text).__name__}")
@@ -142,14 +136,14 @@ class QueryAnalyzer:
         return self._run_hybrid(prepared)
 
     def _preprocess(self, text: str) -> str:
-        """Normalize raw input text before pipeline dispatch."""
+        """파이프라인 디스패치 전에 원시 입력 텍스트를 정규화합니다."""
         return self._normalizer.normalize(text)
 
     def _run_lexical(self, text: str) -> LexicalQueryResult:
-        """Lexical pipeline: POS-filtered nouns/foreign/number + stopword removal.
+        """Lexical 파이프라인: POS 필터링된 명사/외국어/숫자 + 불용어 제거.
 
-        Only tokens whose primary POS tag is in :data:`_LEXICAL_POS` pass through,
-        ensuring verb endings and particles are excluded from BM25 index terms.
+        주 POS 태그가 :data:`_LEXICAL_POS`에 있는 토큰만 통과시켜,
+        동사 어미와 조사가 BM25 색인 용어에서 제외되도록 합니다.
         """
         if not text:
             return LexicalQueryResult(keywords=(), query="")
@@ -165,16 +159,15 @@ class QueryAnalyzer:
         )
 
     def _run_semantic(self, text: str) -> SemanticQueryResult:
-        """Semantic pipeline: preserve the natural sentence verbatim.
+        """Semantic 파이프라인: 자연 문장을 그대로 보존합니다.
 
-        Tokenization is forbidden here — embedding models consume
-        free-form text and benefit from the original word ordering and
-        function words that the lexical pipeline strips.
+        여기서 토큰화는 금지됩니다 — 임베딩 모델은 자유 형식 텍스트를 소비하며
+        lexical 파이프라인이 제거하는 원래 단어 순서와 기능어로부터 이점을 얻습니다.
         """
         return SemanticQueryResult(query=text)
 
     def _run_graph(self, text: str) -> GraphQueryResult:
-        """Graph pipeline: extract noun/proper-noun lemmas as seed nodes."""
+        """Graph 파이프라인: 명사/고유명사 표제어를 시드 노드로 추출합니다."""
         if not text:
             return GraphQueryResult(seed_nodes=())
         morphs: list[MorphToken] = self._tokenizer.analyze(text)
@@ -182,12 +175,11 @@ class QueryAnalyzer:
         return GraphQueryResult(seed_nodes=seeds)
 
     def _run_hybrid(self, text: str) -> HybridQueryResult:
-        """Hybrid pipeline: run lexical, semantic, and graph in parallel.
+        """Hybrid 파이프라인: lexical, semantic, graph를 병렬로 실행합니다.
 
-        The three branches share the same preprocessed input but call
-        into independent MeCab/Python code paths, so a small thread
-        pool overlaps their work without contention. The pool is bounded
-        and torn down per call — hybrid analysis is not a hot loop.
+        세 브랜치는 동일한 전처리된 입력을 공유하지만 독립적인 MeCab/Python
+        코드 경로를 호출하므로, 작은 스레드 풀이 경합 없이 작업을 겹쳐 처리합니다.
+        풀은 제한적이며 호출당 해제됩니다 — hybrid 분석은 hot loop가 아닙니다.
         """
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             f_lex = executor.submit(self._run_lexical, text)
@@ -201,7 +193,7 @@ class QueryAnalyzer:
 
     @staticmethod
     def _resolve_target(target: QueryTarget | str) -> QueryTarget:
-        """Coerce *target* into a :class:`QueryTarget` or raise."""
+        """*target*을 :class:`QueryTarget`으로 강제 변환하거나 예외를 발생시킵니다."""
         if isinstance(target, QueryTarget):
             return target
         if isinstance(target, str):
@@ -219,7 +211,7 @@ _default_analyzer: QueryAnalyzer | None = None
 
 
 def _get_default_analyzer() -> QueryAnalyzer:
-    """Lazily construct and cache the module-level default analyzer."""
+    """모듈 수준의 기본 분석기를 지연 생성하고 캐시합니다."""
     global _default_analyzer
     if _default_analyzer is None:
         _default_analyzer = QueryAnalyzer()
@@ -230,17 +222,16 @@ def analyze_query(
     text: str,
     target: QueryTarget | str = "lexical",
 ) -> QueryResult:
-    """Convenience wrapper around the default :class:`QueryAnalyzer`.
+    """기본 :class:`QueryAnalyzer`를 감싸는 편의 래퍼.
 
-    Equivalent to ``QueryAnalyzer().analyze(text, target)`` but reuses a
-    module-level instance so the underlying MeCab and spacing singletons
-    are only resolved once.
+    ``QueryAnalyzer().analyze(text, target)``과 동일하지만 모듈 수준 인스턴스를
+    재사용하여 하위 MeCab 싱글톤이 한 번만 초기화됩니다.
 
-    Args:
-        text: Raw user query.
-        target: Retrieval target; see :meth:`QueryAnalyzer.analyze`.
+    인자:
+        text: 원시 사용자 쿼리.
+        target: 검색 대상; :meth:`QueryAnalyzer.analyze` 참조.
 
-    Returns:
-        The :class:`QueryResult` produced by the chosen pipeline.
+    반환:
+        선택한 파이프라인이 생성한 :class:`QueryResult`.
     """
     return _get_default_analyzer().analyze(text, target)

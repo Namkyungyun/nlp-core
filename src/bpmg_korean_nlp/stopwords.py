@@ -1,10 +1,9 @@
-"""Domain-agnostic Korean stopword set and helper for safe extension.
+"""도메인 비특화 한국어 불용어 집합 및 안전한 확장을 위한 헬퍼.
 
-:data:`DEFAULT_STOPWORDS` is a ``frozenset`` so it is immutable at the type
-level — any attempt to mutate it raises ``AttributeError`` at runtime.
-Domain-specific stopwords (e.g. ``'수업'``, ``'교재'``) are intentionally
-*not* included here; consumers must extend the set with
-:func:`merge_stopwords`.
+:data:`DEFAULT_STOPWORDS`는 ``frozenset``이므로 타입 수준에서 불변입니다 —
+변경 시도 시 런타임에 ``AttributeError``가 발생합니다.
+도메인 특화 불용어(예: ``'수업'``, ``'교재'``)는 의도적으로 여기에 포함되지
+않으며, 소비자는 :func:`merge_stopwords`로 집합을 확장해야 합니다.
 """
 
 from __future__ import annotations
@@ -199,19 +198,17 @@ def merge_stopwords(
     *additional: frozenset[str] | set[str],
     base: frozenset[str] | None = None,
 ) -> frozenset[str]:
-    """Return a new ``frozenset`` combining *base* with every *additional* set.
+    """*base*와 모든 *additional* 집합을 합친 새 ``frozenset``을 반환합니다.
 
-    The original :data:`DEFAULT_STOPWORDS` is never modified — ``frozenset``
-    union always produces a fresh object.
+    원본 :data:`DEFAULT_STOPWORDS`는 절대 수정되지 않습니다 — ``frozenset``
+    합집합은 항상 새 객체를 생성합니다.
 
-    Args:
-        *additional: Zero or more sets of extra stopwords to union in.
-        base: The starting set. When ``None`` (default),
-            :data:`DEFAULT_STOPWORDS` is used.
+    인자:
+        *additional: 합집합에 추가할 0개 이상의 불용어 집합.
+        base: 시작 집합. ``None``(기본값)이면 :data:`DEFAULT_STOPWORDS`가 사용됩니다.
 
-    Returns:
-        A frozen set containing every word from *base* and every word from
-        every *additional* set.
+    반환:
+        *base*의 모든 단어와 모든 *additional* 집합의 모든 단어를 포함하는 frozenset.
     """
     starting: frozenset[str] = DEFAULT_STOPWORDS if base is None else frozenset(base)
     if not additional:

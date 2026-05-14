@@ -1,4 +1,4 @@
-"""Tests for the public dataclass surface in ``bpmg_korean_nlp.models``."""
+"""``bpmg_korean_nlp.models``의 공개 데이터클래스 인터페이스 테스트."""
 
 from __future__ import annotations
 
@@ -30,20 +30,20 @@ _FROZEN_MODELS: list[object] = [
 
 @pytest.mark.parametrize("instance", _FROZEN_MODELS)
 def test_models_are_frozen(instance: object) -> None:
-    """Every dataclass model rejects attribute mutation."""
+    """모든 데이터클래스 모델은 속성 변경을 거부합니다."""
     with pytest.raises((AttributeError, TypeError)):
         instance.surface = "new"  # type: ignore[attr-defined]
 
 
 @pytest.mark.parametrize("instance", _FROZEN_MODELS)
 def test_models_use_slots(instance: object) -> None:
-    """slots=True forbids assigning unknown attributes."""
+    """slots=True는 알 수 없는 속성 할당을 금지합니다."""
     with pytest.raises((AttributeError, TypeError)):
         instance.bogus_field = "x"  # type: ignore[attr-defined]
 
 
 def test_models_are_hashable() -> None:
-    """Frozen dataclasses are hashable when their fields are hashable."""
+    """동결된(frozen) 데이터클래스는 필드가 해시 가능할 때 해시 가능합니다."""
     a = MorphToken(surface="가", lemma="가", pos="JKS", start=0, end=1)
     b = MorphToken(surface="가", lemma="가", pos="JKS", start=0, end=1)
     assert hash(a) == hash(b)
@@ -51,7 +51,7 @@ def test_models_are_hashable() -> None:
 
 
 def test_hybrid_holds_sub_results() -> None:
-    """``HybridQueryResult`` stores the three branch results verbatim."""
+    """``HybridQueryResult``는 세 브랜치 결과를 그대로 저장합니다."""
     lex = LexicalQueryResult(keywords=("k",), query="k")
     sem = SemanticQueryResult(query="hi")
     gph = GraphQueryResult(seed_nodes=("seoul",))
@@ -62,14 +62,14 @@ def test_hybrid_holds_sub_results() -> None:
 
 
 def test_pii_pattern_compiles() -> None:
-    """``PIIPattern.pattern`` holds a real compiled regex."""
+    """``PIIPattern.pattern``은 실제로 컴파일된 정규식을 보유합니다."""
     p = PIIPattern(name="x", description="d", pattern=re.compile(r"\d{6}"))
     assert isinstance(p.pattern, re.Pattern)
     assert p.pattern.fullmatch("123456") is not None
 
 
 def test_morph_token_offsets() -> None:
-    """``start``/``end`` are plain ints; equality covers all fields."""
+    """``start``/``end``는 일반 정수이며, 동등성은 모든 필드를 포함합니다."""
     t = MorphToken(surface="가", lemma="가", pos="JKS", start=0, end=1)
     assert t.start == 0
     assert t.end == 1

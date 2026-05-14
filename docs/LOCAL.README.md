@@ -205,10 +205,10 @@ pytest tests/ -q
 **기대 출력**
 
 ```
-261 passed, 2 skipped
+269 passed, 2 skipped
 ```
 
-> 스킵 2건은 MeCab이 설치된 환경에서 `MeCab 미설치 시 동작`을 검증하는 테스트(`test_missing_binding_raises`, `test_missing_binding_reports_unavailable`)가 정상 스킵됩니다. `@pytest.mark.slow` 테스트가 포함되면 통과 건수가 더 많아집니다. 더 자세한 테스트 절차는 [LOCAL.TEST.md](./LOCAL.TEST.md)를 참고하세요.
+> 스킵 2건은 MeCab이 설치된 환경에서 `MeCab 미설치 시 동작`을 검증하는 테스트(`test_missing_binding_raises`, `test_missing_binding_reports_unavailable`)가 정상 스킵됩니다. 더 자세한 테스트 절차는 [LOCAL.TEST.md](./LOCAL.TEST.md)를 참고하세요.
 
 ---
 

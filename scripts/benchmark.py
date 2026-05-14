@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
-"""Performance baseline runner for korean-nlp-core.
+"""korean-nlp-core 성능 기준 실행기.
 
-Reports the p99 latency of two hot paths (tokenize, hybrid
-``analyze_query``), the wall time for a 1000-call tokenize loop, and the
-resident memory after the model+dictionary have been loaded.
+두 가지 핫 패스(tokenize, hybrid ``analyze_query``)의 p99 지연 시간,
+1000회 tokenize 루프의 wall time, 모델+사전 로드 후 상주 메모리를 보고합니다.
 
-Targets (post-load, single short sentence):
+목표값 (로드 후, 단일 짧은 문장):
 
 * ``tokenize`` p99   < 5 ms
 * ``hybrid``  p99    < 100 ms
-* 1000-call batch tokenize < 2 s wall time
-* resident memory after dict load < 500 MB
+* 1000회 배치 tokenize < 2 s wall time
+* 사전 로드 후 상주 메모리 < 500 MB
 
-The script exits with status ``0`` when every target is met, ``1`` when
-any target is missed, and ``2`` when one or more heavy deps are
-unavailable so the corresponding metric could not be measured. The
-output is plain text suitable for CI logs.
+모든 목표를 충족하면 상태 ``0``, 하나라도 미달하면 ``1``, 하나 이상의
+무거운 의존성을 사용할 수 없어 해당 지표를 측정할 수 없으면 ``2``로 종료합니다.
+출력은 CI 로그에 적합한 일반 텍스트입니다.
 """
 
 from __future__ import annotations
@@ -38,7 +36,7 @@ _MEMORY_TARGET_MB = 500.0
 
 @dataclass(frozen=True, slots=True)
 class _LatencyStats:
-    """Summary statistics for a latency sample (all values in milliseconds)."""
+    """지연 시간 샘플의 요약 통계 (모든 값은 밀리초 단위)."""
 
     p50: float
     p90: float
@@ -48,7 +46,7 @@ class _LatencyStats:
 
 
 def _measure(fn: Callable[[], object], iterations: int) -> _LatencyStats:
-    """Return latency stats over *iterations* calls to *fn*."""
+    """*fn*을 *iterations*번 호출한 지연 시간 통계를 반환합니다."""
     timings_ms: list[float] = []
     for _ in range(iterations):
         start = time.perf_counter()
@@ -101,7 +99,7 @@ def _import_analyzer() -> object | None:
 
 
 def main(iterations: int = _DEFAULT_ITERATIONS, text: str = _DEFAULT_SAMPLE_TEXT) -> int:
-    """Run the benchmark and return the CI exit code."""
+    """벤치마크를 실행하고 CI 종료 코드를 반환합니다."""
     print(f"# korean-nlp-core benchmark — text={text!r}, iterations={iterations}")
     print()
 
@@ -114,9 +112,9 @@ def main(iterations: int = _DEFAULT_ITERATIONS, text: str = _DEFAULT_SAMPLE_TEXT
     tokenizer = _import_tokenizer()
     if tokenizer is None:
         missing.append("tokenize")
-        print("[SKIP] tokenize    — MeCab unavailable")
+        print("[SKIP] tokenize    — MeCab 사용 불가")
     else:
-        # Warm-up so first-call jitter doesn't dominate the histogram.
+        # 첫 번째 호출 지터가 히스토그램을 지배하지 않도록 워밍업합니다.
         tokenizer.tokenize(text)  # type: ignore[attr-defined]
         stats = _measure(lambda: tokenizer.tokenize(text), iterations)  # type: ignore[attr-defined]
         print(_format_row("tokenize", stats, _TOKENIZE_TARGET_MS))
@@ -139,7 +137,7 @@ def main(iterations: int = _DEFAULT_ITERATIONS, text: str = _DEFAULT_SAMPLE_TEXT
     analyzer = _import_analyzer()
     if analyzer is None:
         missing.append("hybrid")
-        print("[SKIP] hybrid      — MeCab unavailable")
+        print("[SKIP] hybrid      — MeCab 사용 불가")
     else:
         analyzer.analyze(text, "hybrid")  # type: ignore[attr-defined]
         stats = _measure(

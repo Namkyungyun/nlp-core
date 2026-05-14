@@ -1,11 +1,10 @@
-"""Secondary PII filter for korean-nlp-core.
+"""korean-nlp-core 2차 PII 필터.
 
-Provides a catalogue of Korean PII regex patterns and a blocking helper
-:func:`check_pii` that raises :class:`PIIDetectedError` when any pattern
-matches. This acts as a safety net after ``guardrail-core`` — it does **not**
-replace it.
+한국어 PII 정규식 패턴 카탈로그와 패턴이 일치하면 :class:`PIIDetectedError`를
+발생시키는 차단 헬퍼 :func:`check_pii`를 제공합니다. ``guardrail-core`` 이후
+안전망 역할을 하며 — 이를 **대체하지 않습니다**.
 
-Runtime masking or redaction must not be added here.
+런타임 마스킹 또는 편집 기능을 여기에 추가해서는 안 됩니다.
 """
 
 from __future__ import annotations
@@ -43,17 +42,17 @@ PII_PATTERNS: tuple[PIIPattern, ...] = (
 
 
 def check_pii(text: str) -> None:
-    """Raise :class:`PIIDetectedError` if *text* contains any PII pattern.
+    """*text*에 PII 패턴이 포함되어 있으면 :class:`PIIDetectedError`를 발생시킵니다.
 
-    Scans all :data:`PII_PATTERNS` and collects every matching pattern name.
-    A single scan pass means multiple simultaneous matches are all reported
-    at once rather than failing on the first hit.
+    모든 :data:`PII_PATTERNS`를 스캔하고 일치하는 모든 패턴 이름을 수집합니다.
+    단일 스캔 패스이므로 첫 번째 일치에서 실패하는 대신 여러 동시 일치를
+    한 번에 모두 보고합니다.
 
-    Args:
-        text: The input string to scan.
+    인자:
+        text: 스캔할 입력 문자열.
 
-    Raises:
-        PIIDetectedError: When at least one pattern matches.
+    예외:
+        PIIDetectedError: 하나 이상의 패턴이 일치하는 경우.
     """
     matched = [p.name for p in PII_PATTERNS if p.pattern.search(text)]
     if matched:

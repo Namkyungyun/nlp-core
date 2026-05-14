@@ -33,10 +33,10 @@ pytest tests/ -v
 **기대 결과**
 
 ```
-261 passed, 2 skipped
+269 passed, 2 skipped
 ```
 
-> 스킵 2건은 MeCab이 설치된 환경에서 `MeCab 미설치 시 동작`을 검증하는 테스트(`test_missing_binding_raises`, `test_missing_binding_reports_unavailable`)가 정상 스킵됩니다. `@pytest.mark.slow` 테스트 포함 전체 실행 시 통과 건수는 더 많아집니다.
+> 스킵 2건은 MeCab이 설치된 환경에서 `MeCab 미설치 시 동작`을 검증하는 테스트(`test_missing_binding_raises`, `test_missing_binding_reports_unavailable`)가 정상 스킵됩니다.
 
 ---
 
@@ -176,7 +176,7 @@ pytest tests/test_tokenizer.py::test_tokenize_basic -v
 | `ModuleNotFoundError: bpmg_korean_nlp` | venv 활성화 확인 → `which python` 결과가 `.venv/bin/python`인가? `pip install -e ".[dev]"` 재실행 |
 | `ModuleNotFoundError: mecab` 또는 `python-mecab-ko` 관련 | `pip show python-mecab-ko` 로 설치 여부 확인. 없으면 `pip install -e ".[dev]"` 재실행 |
 | Apple Silicon에서 사전 경로가 `/usr/local/...`로 잡힘 | 일반 `mecab`이 잔존. `brew uninstall mecab` 후 `brew install mecab-ko mecab-ko-dic` |
-| `261 passed` 대신 다수 skip | MeCab 설치 환경에서 2건 skip은 정상 (`test_missing_binding_*`). 그 이상은 venv가 잘못된 Python을 가리키거나 MeCab 사전 경로 문제가 원인인 경우가 많음 |
+| `269 passed` 대신 다수 skip | MeCab 설치 환경에서 2건 skip은 정상 (`test_missing_binding_*`). 그 이상은 venv가 잘못된 Python을 가리키거나 MeCab 사전 경로 문제가 원인인 경우가 많음 |
 | 커버리지 96% 미만 | 신규 코드에 테스트가 빠졌는지 점검. `--cov-report=term-missing` 출력의 Missing 컬럼을 확인 |
 
 ---

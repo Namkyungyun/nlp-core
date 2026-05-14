@@ -1,17 +1,16 @@
-"""Text normalization for korean-nlp-core.
+"""korean-nlp-core 텍스트 정규화.
 
-:class:`KoreanNormalizer` applies a fixed-order pipeline that cleans Korean
-input text before downstream tokenization, spacing restoration, or query
-analysis:
+:class:`KoreanNormalizer`는 다운스트림 토큰화 또는 쿼리 분석 전에 한국어 입력
+텍스트를 정리하는 고정 순서 파이프라인을 적용합니다:
 
-    NFC  →  Unicode whitespace folding  →  whitespace collapse  →
-    soynlp ``repeat_normalize``  →  (optional) hanja → hangul  →
-    (optional) user-supplied regex substitutions  →
-    (optional) noise strip (punctuation / symbols / emoji / jamo emoticons)
+    NFC  →  유니코드 공백 변환  →  공백 압축  →
+    soynlp ``repeat_normalize``  →  (선택) 한자 → 한글  →
+    (선택) 사용자 정의 정규식 치환  →
+    (선택) 노이즈 제거 (구두점 / 기호 / 이모지 / 자모 감탄사)
 
-The default settings — ``hanja_to_hangul=False`` and an always-on NFC plus
-``repeat_normalize`` step — are locked by team agreement and must not be
-loosened without a coordinated change across the SDK.
+기본 설정 — ``hanja_to_hangul=False`` 및 항상 활성화된 NFC +
+``repeat_normalize`` 단계 — 은 팀 합의로 고정되어 있으며, SDK 전반에 걸친
+조율 없이 변경해서는 안 됩니다.
 """
 
 from __future__ import annotations
@@ -43,27 +42,26 @@ _JAMO_NOISE_RE: Final[regex.Pattern[str]] = regex.compile(
 
 
 class KoreanNormalizer:
-    """Deterministic Korean text normalizer.
+    """결정적(deterministic) 한국어 텍스트 정규화기.
 
-    The pipeline is fixed: NFC, Unicode-whitespace folding, multi-whitespace
-    collapse, ``soynlp.normalize.repeat_normalize`` with ``num_repeats=2``,
-    optional hanja→hangul transliteration, and optional user regex rules.
+    파이프라인은 고정되어 있습니다: NFC, 유니코드 공백 변환, 다중 공백 압축,
+    ``num_repeats=2``인 ``soynlp.normalize.repeat_normalize``,
+    선택적 한자→한글 음역, 선택적 사용자 정규식 규칙.
 
-    Args:
-        hanja_to_hangul: When ``True``, hanja characters are transliterated to
-            hangul as a best effort. The conversion can be lossy, so a warning
-            is emitted on each call that actually rewrites text. Requires the
-            optional :mod:`hanja` package; when it is not installed the
-            argument is silently treated as ``False``.
-        custom_substitutions: Optional ordered list of ``(pattern, replacement)``
-            tuples applied with :func:`re.sub` after the rest of the pipeline.
-        strip_noise: When ``True``, punctuation, symbols, emoji, and standalone
-            Hangul jamo (e.g. ``ㅋ``, ``ㅎ``) are removed after the rest of the
-            pipeline. Defaults to ``False`` to preserve existing behaviour.
+    인자:
+        hanja_to_hangul: ``True``이면 한자 문자를 최선 노력으로 한글로 음역합니다.
+            변환이 손실될 수 있으므로 실제로 텍스트를 재작성하는 각 호출에서
+            경고가 발생합니다. 선택적 :mod:`hanja` 패키지가 필요하며,
+            설치되어 있지 않으면 자동으로 ``False``로 처리됩니다.
+        custom_substitutions: 파이프라인의 나머지 처리 후 :func:`re.sub`으로
+            적용되는 ``(pattern, replacement)`` 튜플의 선택적 순서 목록.
+        strip_noise: ``True``이면 파이프라인의 나머지 처리 후 구두점, 기호,
+            이모지, 독립적인 한글 자모(예: ``ㅋ``, ``ㅎ``)를 제거합니다.
+            기존 동작을 보존하기 위해 기본값은 ``False``입니다.
 
-    Raises:
-        InvalidInputError: If :meth:`normalize` is given a ``None`` value or
-            any non-``str`` input.
+    예외:
+        InvalidInputError: :meth:`normalize`에 ``None`` 값이나 ``str``이 아닌
+            입력이 주어진 경우.
     """
 
     __slots__ = ("_custom_substitutions", "_hanja_to_hangul", "_strip_noise")
@@ -82,20 +80,20 @@ class KoreanNormalizer:
 
     @classmethod
     def default(cls) -> KoreanNormalizer:
-        """Return a normalizer configured with the locked default options."""
+        """고정된 기본 옵션으로 구성된 정규화기를 반환합니다."""
         return cls()
 
     def normalize(self, text: str) -> str:
-        """Normalize *text* through the full pipeline.
+        """*text*를 전체 파이프라인으로 정규화합니다.
 
-        Args:
-            text: Raw input string.
+        인자:
+            text: 원시 입력 문자열.
 
-        Returns:
-            Normalized text. An empty input produces an empty output.
+        반환:
+            정규화된 텍스트. 빈 입력은 빈 출력을 생성합니다.
 
-        Raises:
-            InvalidInputError: If *text* is ``None`` or not a ``str``.
+        예외:
+            InvalidInputError: *text*가 ``None``이거나 ``str``이 아닌 경우.
         """
         if not isinstance(text, str):
             raise InvalidInputError(
@@ -124,11 +122,11 @@ class KoreanNormalizer:
 
     @staticmethod
     def _convert_hanja(text: str) -> str:
-        """Best-effort hanja→hangul transliteration.
+        """최선 노력(best-effort) 한자→한글 음역.
 
-        Returns *text* unchanged when the optional :mod:`hanja` package is not
-        installed; emits a single warning per call when an actual rewrite
-        occurs (the transformation may be lossy).
+        선택적 :mod:`hanja` 패키지가 설치되어 있지 않으면 *text*를 변경 없이
+        반환합니다. 실제로 재작성이 발생하면 호출당 하나의 경고를 발생시킵니다
+        (변환이 손실될 수 있음).
         """
         try:
             import hanja as _hanja  # type: ignore[import-not-found, unused-ignore]

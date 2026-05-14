@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-"""Static guard against forbidden cross-package imports.
+"""금지된 패키지 간 임포트에 대한 정적 방어막.
 
-This script statically scans every ``.py`` file under one or more source
-roots and exits with a non-zero status if any file imports a package from
-the forbidden list below. It is invoked in CI before tests run so that a
-violation fails the build immediately.
+이 스크립트는 하나 이상의 소스 루트 아래의 모든 ``.py`` 파일을 정적으로 스캔하고
+아래의 금지 목록에 있는 패키지를 임포트하는 파일이 있으면 비정상 상태로 종료합니다.
+위반이 빌드를 즉시 실패시키도록 테스트 실행 전 CI에서 호출됩니다.
 
-Forbidden packages
-------------------
+금지된 패키지
+-------------
 - retrieval-core / retrieval_core
 - guardrail-core / guardrail_core
 - chatbot-contracts / chatbot_contracts
 
-Usage
------
+사용법
+------
     python scripts/check_imports.py src/
 """
 
@@ -37,13 +36,13 @@ FORBIDDEN_PACKAGES: frozenset[str] = frozenset(
 
 
 def _normalize(name: str) -> str:
-    """Return a comparable form of a dotted module name's top-level package."""
+    """점으로 구분된 모듈 이름의 최상위 패키지를 비교 가능한 형태로 반환합니다."""
     head = name.split(".", 1)[0]
     return head.replace("-", "_")
 
 
 def _iter_python_files(roots: Iterable[Path]) -> Iterator[Path]:
-    """Yield every ``.py`` file beneath ``roots``."""
+    """``roots`` 아래의 모든 ``.py`` 파일을 순서대로 반환합니다."""
     for root in roots:
         if root.is_file() and root.suffix == ".py":
             yield root
@@ -54,10 +53,10 @@ def _iter_python_files(roots: Iterable[Path]) -> Iterator[Path]:
 
 
 def _violations_in_file(path: Path) -> list[tuple[int, str]]:
-    """Return ``(lineno, package)`` pairs for any forbidden imports in *path*.
+    """*path*에서 금지된 임포트에 대한 ``(lineno, package)`` 쌍을 반환합니다.
 
-    Files that fail to parse are silently skipped — a syntax error is a
-    different problem and is surfaced by other tools (ruff, mypy).
+    파싱에 실패한 파일은 자동으로 건너뜁니다 — 구문 오류는 다른 문제이며
+    다른 도구(ruff, mypy)를 통해 표면화됩니다.
     """
     try:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -79,7 +78,7 @@ def _violations_in_file(path: Path) -> list[tuple[int, str]]:
 
 
 def check(roots: Iterable[Path]) -> int:
-    """Scan *roots* and return ``0`` when clean, ``1`` when violations exist."""
+    """*roots*를 스캔하고 정상이면 ``0``, 위반이 있으면 ``1``을 반환합니다."""
     violations: list[tuple[Path, int, str]] = []
     for file_path in _iter_python_files(roots):
         for lineno, package in _violations_in_file(file_path):
@@ -88,21 +87,21 @@ def check(roots: Iterable[Path]) -> int:
     if not violations:
         return 0
 
-    print("Forbidden imports detected:", file=sys.stderr)
+    print("금지된 임포트가 감지됨:", file=sys.stderr)
     for file_path, lineno, package in violations:
-        print(f"  {file_path}:{lineno}: imports {package!r}", file=sys.stderr)
+        print(f"  {file_path}:{lineno}: {package!r} 임포트", file=sys.stderr)
     print(
-        f"\n{len(violations)} violation(s). "
-        f"Forbidden packages: {sorted(FORBIDDEN_PACKAGES)}",
+        f"\n{len(violations)}개 위반. "
+        f"금지된 패키지: {sorted(FORBIDDEN_PACKAGES)}",
         file=sys.stderr,
     )
     return 1
 
 
 def main(argv: list[str]) -> int:
-    """CLI entry point. Returns the process exit code."""
+    """CLI 진입점. 프로세스 종료 코드를 반환합니다."""
     if len(argv) < 2:
-        print("usage: check_imports.py <path> [<path> ...]", file=sys.stderr)
+        print("사용법: check_imports.py <경로> [<경로> ...]", file=sys.stderr)
         return 2
     roots = [Path(arg) for arg in argv[1:]]
     return check(roots)

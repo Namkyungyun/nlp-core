@@ -1,4 +1,4 @@
-"""Tests for the Hangul jamo decomposition / composition layer."""
+"""한글 자모 분해/조합 계층 테스트."""
 
 from __future__ import annotations
 
@@ -18,14 +18,14 @@ from bpmg_korean_nlp.jamo_utils import (
 
 
 def test_decompose_basic() -> None:
-    """``한`` decomposes into (ㅎ, ㅏ, ㄴ)."""
+    """``한``은 (ㅎ, ㅏ, ㄴ)으로 분해됩니다."""
     from bpmg_korean_nlp.models import JamoComponents
 
     assert decompose("한") == JamoComponents(choseong="ㅎ", jungseong="ㅏ", jongseong="ㄴ")
 
 
 def test_decompose_no_jongseong() -> None:
-    """A syllable without a final consonant has empty ``jongseong``."""
+    """종성이 없는 음절의 ``jongseong``은 빈 문자열입니다."""
     components = decompose("가")
     assert components.choseong == "ㄱ"
     assert components.jungseong == "ㅏ"
@@ -38,12 +38,12 @@ def test_compose_basic() -> None:
 
 
 def test_compose_no_jongseong() -> None:
-    """An omitted jongseong defaults to an empty string."""
+    """생략된 종성은 기본적으로 빈 문자열입니다."""
     assert compose("ㄱ", "ㅏ") == "가"
 
 
 def test_compose_decompose_full_roundtrip() -> None:
-    """Every syllable in the U+AC00 to U+D7A3 range round-trips losslessly."""
+    """U+AC00부터 U+D7A3 범위의 모든 음절이 손실 없이 라운드 트립합니다."""
     for code in range(0xAC00, 0xD7A3 + 1):
         syllable = chr(code)
         c = decompose(syllable)
@@ -85,12 +85,12 @@ def test_compose_rejects_invalid_jamo() -> None:
 
 
 def test_extract_choseong_korean() -> None:
-    """Each syllable contributes its initial consonant."""
+    """각 음절은 초성을 제공합니다."""
     assert extract_choseong("한국어") == "ㅎㄱㅇ"
 
 
 def test_extract_choseong_mixed() -> None:
-    """Non-Hangul characters are preserved verbatim."""
+    """한글이 아닌 문자는 그대로 보존됩니다."""
     assert extract_choseong("Hello 세계") == "Hello ㅅㄱ"
 
 
@@ -129,7 +129,7 @@ def test_extract_choseong_rejects_none() -> None:
     ],
 )
 def test_classify_char(char: str, expected: CharType) -> None:
-    """Each script bucket is classified correctly."""
+    """각 스크립트 버킷이 올바르게 분류됩니다."""
     assert classify_char(char) == expected
 
 
@@ -149,13 +149,13 @@ def test_classify_char_rejects_none() -> None:
 
 
 def test_classify_char_fullwidth_digit() -> None:
-    """Fullwidth digit '０' is bucketed as NUMBER."""  # noqa: RUF002
+    """전각 숫자 '０'은 NUMBER로 분류됩니다."""  # noqa: RUF002
     assert classify_char("０") == CharType.NUMBER  # noqa: RUF001
 
 
 def test_tables_have_expected_sizes() -> None:
-    """The jamo tables match the Unicode Hangul algorithm constants."""
+    """자모 테이블이 유니코드 한글 알고리즘 상수와 일치합니다."""
     assert len(CHOSEONG_TABLE) == 19
     assert len(JUNGSEONG_TABLE) == 21
     assert len(JONGSEONG_TABLE) == 28
-    assert JONGSEONG_TABLE[0] == ""  # index 0 = no final consonant
+    assert JONGSEONG_TABLE[0] == ""  # 인덱스 0 = 종성 없음

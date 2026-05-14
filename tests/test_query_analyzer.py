@@ -1,8 +1,7 @@
-"""Tests for the QueryAnalyzer 4-target pipeline.
+"""QueryAnalyzer 4대상 파이프라인 테스트.
 
-All target dispatch logic is verified against DI fakes so the suite runs
-without MeCab. Real-model integration is covered by the
-golden-set tests under :mod:`test_golden`.
+모든 대상 디스패치 로직은 DI 가짜로 검증되어 MeCab 없이도 스위트가 실행됩니다.
+실제 모델 통합은 :mod:`test_golden`의 골든 집합 테스트에서 다룹니다.
 """
 
 from __future__ import annotations
@@ -37,36 +36,35 @@ def _build_analyzer(
 
 
 # ---------------------------------------------------------------------------
-# Result types
+# 결과 타입
 # ---------------------------------------------------------------------------
 
 
 def test_lexical_returns_lexical_result() -> None:
-    """Lexical target returns ``LexicalQueryResult`` with tuple keywords."""
+    """Lexical 대상은 튜플 키워드가 있는 ``LexicalQueryResult``를 반환합니다."""
     qa, _ = _build_analyzer([("조사", "NNG"), ("어미", "NNG"), ("차이", "NNG"), ("가", "JKS")])
     result = qa.analyze("조사랑 어미 차이", QueryTarget.LEXICAL)
     assert isinstance(result, LexicalQueryResult)
     assert isinstance(result.keywords, tuple)
     assert isinstance(result.query, str)
-    # particle "가" is in DEFAULT_STOPWORDS
+    # 조사 "가"는 DEFAULT_STOPWORDS에 있음
     assert "가" not in result.keywords
     assert result.query == " ".join(result.keywords)
 
 
 def test_semantic_returns_semantic_result() -> None:
-    """Semantic target preserves the preprocessed natural sentence."""
+    """Semantic 대상은 전처리된 자연 문장을 보존합니다."""
     qa, _ = _build_analyzer([])
     text = "조사와 어미의 차이는 무엇인가요?"
     result = qa.analyze(text, QueryTarget.SEMANTIC)
     assert isinstance(result, SemanticQueryResult)
-    # The normalizer is a pass-through fake (strips), so the query equals
-    # the post-preprocessing text — but it must remain free-form (with
-    # punctuation intact).
+    # 정규화기는 통과(pass-through) 가짜(공백 제거)이므로 쿼리는
+    # 전처리 후 텍스트와 같음 — 하지만 자유 형식이어야 함 (구두점 유지).
     assert "?" in result.query
 
 
 def test_graph_returns_graph_result_nng_nnp_only() -> None:
-    """Graph target collects only ``NNG``/``NNP`` lemmas."""
+    """Graph 대상은 ``NNG``/``NNP`` 표제어만 수집합니다."""
     qa, _ = _build_analyzer(
         [
             ("서울", "NNP"),
@@ -85,7 +83,7 @@ def test_graph_returns_graph_result_nng_nnp_only() -> None:
 
 
 def test_hybrid_returns_hybrid_result_with_all_three() -> None:
-    """Hybrid target bundles lexical + semantic + graph in one record."""
+    """Hybrid 대상은 lexical + semantic + graph를 하나의 레코드로 묶습니다."""
     qa, _ = _build_analyzer(
         [
             ("서울", "NNP"),
@@ -101,7 +99,7 @@ def test_hybrid_returns_hybrid_result_with_all_three() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Empty / whitespace input x 4 targets
+# 빈 문자열 / 공백 입력 × 4 대상
 # ---------------------------------------------------------------------------
 
 
@@ -110,7 +108,7 @@ def test_hybrid_returns_hybrid_result_with_all_three() -> None:
     [QueryTarget.LEXICAL, QueryTarget.SEMANTIC, QueryTarget.GRAPH, QueryTarget.HYBRID],
 )
 def test_empty_input_per_target(target: QueryTarget) -> None:
-    """Empty-string input produces empty-result objects for every target."""
+    """빈 문자열 입력은 모든 대상에 대해 빈 결과 객체를 생성합니다."""
     qa, _ = _build_analyzer([])
     result = qa.analyze("", target)
     if isinstance(result, LexicalQueryResult):
@@ -132,14 +130,14 @@ def test_empty_input_per_target(target: QueryTarget) -> None:
     [QueryTarget.LEXICAL, QueryTarget.SEMANTIC, QueryTarget.GRAPH, QueryTarget.HYBRID],
 )
 def test_whitespace_only_per_target(target: QueryTarget) -> None:
-    """Whitespace-only normalizes to empty and yields empty results."""
+    """공백만 있는 입력은 빈 문자열로 정규화되어 빈 결과를 반환합니다."""
     qa, _ = _build_analyzer([])
     result = qa.analyze("   \t  ", target)
     assert result is not None
 
 
 # ---------------------------------------------------------------------------
-# English / Hanja / mixed
+# 영어 / 한자 / 혼합
 # ---------------------------------------------------------------------------
 
 
@@ -148,7 +146,7 @@ def test_whitespace_only_per_target(target: QueryTarget) -> None:
     [QueryTarget.LEXICAL, QueryTarget.SEMANTIC, QueryTarget.GRAPH, QueryTarget.HYBRID],
 )
 def test_english_input_per_target(target: QueryTarget) -> None:
-    """Pure-English input flows through every target without raising."""
+    """순수 영어 입력이 모든 대상을 통해 예외 없이 흐릅니다."""
     qa, _ = _build_analyzer([("hello", "SL"), ("world", "SL")])
     result = qa.analyze("hello world", target)
     assert result is not None
@@ -159,14 +157,14 @@ def test_english_input_per_target(target: QueryTarget) -> None:
     [QueryTarget.LEXICAL, QueryTarget.SEMANTIC, QueryTarget.GRAPH, QueryTarget.HYBRID],
 )
 def test_hanja_input_per_target(target: QueryTarget) -> None:
-    """Pure-Hanja input flows through every target without raising."""
+    """순수 한자 입력이 모든 대상을 통해 예외 없이 흐릅니다."""
     qa, _ = _build_analyzer([("國家", "SH")])
     result = qa.analyze("國家", target)
     assert result is not None
 
 
 # ---------------------------------------------------------------------------
-# Target coercion
+# 대상 강제 변환
 # ---------------------------------------------------------------------------
 
 
@@ -175,28 +173,28 @@ def test_hanja_input_per_target(target: QueryTarget) -> None:
     ["lexical", "LEXICAL", "Lexical", "lEXICaL"],
 )
 def test_string_target_case_insensitive(spelling: str) -> None:
-    """String target values are accepted regardless of case."""
+    """문자열 대상 값은 대소문자에 관계없이 허용됩니다."""
     qa, _ = _build_analyzer([("test", "NNG")])
     result = qa.analyze("test", spelling)
     assert isinstance(result, LexicalQueryResult)
 
 
 def test_unknown_target_string_raises() -> None:
-    """An unrecognized target string raises :class:`InvalidInputError`."""
+    """인식되지 않는 대상 문자열은 :class:`InvalidInputError`를 발생시킵니다."""
     qa, _ = _build_analyzer([])
     with pytest.raises(InvalidInputError):
         qa.analyze("test", "unknown_target")
 
 
 def test_non_string_non_enum_target_raises() -> None:
-    """A target that's neither a string nor a :class:`QueryTarget` raises."""
+    """문자열도 :class:`QueryTarget`도 아닌 대상은 예외를 발생시킵니다."""
     qa, _ = _build_analyzer([])
     with pytest.raises(InvalidInputError):
         qa.analyze("test", 123)  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------
-# Input validation
+# 입력 유효성 검사
 # ---------------------------------------------------------------------------
 
 
@@ -213,23 +211,23 @@ def test_rejects_non_str_text() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Pipeline plumbing
+# 파이프라인 배선
 # ---------------------------------------------------------------------------
 
 
 def test_hybrid_runs_each_branch_once() -> None:
-    """Hybrid pipeline produces results consistent with running each branch alone."""
+    """Hybrid 파이프라인은 각 브랜치를 단독으로 실행한 결과와 일관된 결과를 생성합니다."""
     qa, _ = _build_analyzer([("서울", "NNP"), ("일", "NNG"), ("의", "JKG")])
     h = qa.analyze("서울 일의", QueryTarget.HYBRID)
     assert isinstance(h, HybridQueryResult)
-    # graph branch keeps only NNG/NNP
+    # graph 브랜치는 NNG/NNP만 유지
     assert "의" not in h.graph.seed_nodes
-    # lexical branch drops particle "의" via DEFAULT_STOPWORDS
+    # lexical 브랜치는 DEFAULT_STOPWORDS를 통해 조사 "의"를 제거
     assert "의" not in h.lexical.keywords
 
 
 def test_long_input_warning_does_not_raise(caplog: pytest.LogCaptureFixture) -> None:
-    """Inputs over 10k characters emit a WARNING but still complete."""
+    """10k 문자 이상의 입력은 WARNING을 발생시키지만 처리는 완료됩니다."""
     qa, _ = _build_analyzer([])
     long_text = "가" * 10_001
     with caplog.at_level("WARNING", logger="bpmg_korean_nlp.query_analyzer"):
@@ -238,12 +236,12 @@ def test_long_input_warning_does_not_raise(caplog: pytest.LogCaptureFixture) -> 
 
 
 # ---------------------------------------------------------------------------
-# Module-level analyze_query
+# 모듈 수준 analyze_query
 # ---------------------------------------------------------------------------
 
 
 def test_analyze_query_default_target_is_lexical() -> None:
-    """The convenience function defaults to ``"lexical"``."""
+    """편의 함수의 기본값은 ``"lexical"``입니다."""
     from bpmg_korean_nlp import query_analyzer as qa_module
 
     qa_module._default_analyzer = QueryAnalyzer(
@@ -255,7 +253,7 @@ def test_analyze_query_default_target_is_lexical() -> None:
 
 
 def test_analyze_query_accepts_string_target() -> None:
-    """A string target name is forwarded to :meth:`QueryAnalyzer.analyze`."""
+    """문자열 대상 이름이 :meth:`QueryAnalyzer.analyze`로 전달됩니다."""
     from bpmg_korean_nlp import query_analyzer as qa_module
 
     qa_module._default_analyzer = QueryAnalyzer(
@@ -267,17 +265,17 @@ def test_analyze_query_accepts_string_target() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Forbidden imports
+# 금지된 임포트
 # ---------------------------------------------------------------------------
 
 
 # ---------------------------------------------------------------------------
-# POS filter behaviour in lexical pipeline
+# lexical 파이프라인에서의 POS 필터 동작
 # ---------------------------------------------------------------------------
 
 
 def test_lexical_excludes_verb_endings() -> None:
-    """Verb+ending compound tags (VV+EC) are excluded from lexical results."""
+    """동사+어미 복합 태그(VV+EC)는 lexical 결과에서 제외됩니다."""
     qa, _ = _build_analyzer(
         [
             ("맛집", "NNG"),
@@ -295,7 +293,7 @@ def test_lexical_excludes_verb_endings() -> None:
 
 
 def test_lexical_excludes_particles() -> None:
-    """Particle tags (JKS, JKO, etc.) are excluded from lexical results."""
+    """조사 태그(JKS, JKO 등)는 lexical 결과에서 제외됩니다."""
     qa, _ = _build_analyzer(
         [
             ("서울", "NNP"),
@@ -311,7 +309,7 @@ def test_lexical_excludes_particles() -> None:
 
 
 def test_lexical_includes_nng_nnp() -> None:
-    """NNG (common noun) and NNP (proper noun) pass through the POS filter."""
+    """NNG(일반명사)와 NNP(고유명사)는 POS 필터를 통과합니다."""
     qa, _ = _build_analyzer(
         [
             ("한국어", "NNG"),
@@ -329,12 +327,12 @@ def test_lexical_includes_nng_nnp() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Forbidden imports
+# 금지된 임포트
 # ---------------------------------------------------------------------------
 
 
 def test_query_analyzer_does_not_import_retrieval_core() -> None:
-    """Static AST check: ``query_analyzer.py`` does not touch forbidden packages."""
+    """정적 AST 검사: ``query_analyzer.py``가 금지된 패키지를 건드리지 않습니다."""
     forbidden = {"retrieval_core", "guardrail_core", "chatbot_contracts"}
     path = Path(__file__).parent.parent / "src" / "bpmg_korean_nlp" / "query_analyzer.py"
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
