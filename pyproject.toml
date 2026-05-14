@@ -17,7 +17,6 @@ keywords = [
     "nlp",
     "tokenizer",
     "mecab",
-    "spacing",
     "morphology",
     "query-analysis",
 ]
@@ -41,12 +40,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# 띄어쓰기 복원 (SpacingRestorer) — tensorflow 기반, 설치 용량 약 1.5 GB
-spacing = [
-    "kss",
-    "pykospacing @ git+https://github.com/haven-jeon/PyKoSpacing.git",
-    "tensorflow",
-]
 # Optional Hanja → Hangul transliteration (KoreanNormalizer(hanja_to_hangul=True))
 hanja = [
     "hanja",
@@ -99,8 +92,6 @@ show_error_codes = true
 [[tool.mypy.overrides]]
 module = [
     "mecab.*",
-    "pykospacing.*",
-    "kss.*",
     "soynlp.*",
     "hanja.*",
 ]
@@ -154,7 +145,7 @@ addopts = [
 markers = [
     "golden: golden input/output dataset tests",
     "perf: performance baseline tests",
-    "slow: tests that load heavy models (spacing, mecab dict)",
+    "slow: tests that load heavy models (mecab dict)",
 ]
 
 # -----------------------------------------------------------------------------
